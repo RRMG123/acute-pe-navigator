@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+<title>Acute PE Navigator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: sticky tab bar + live summary strip; each step is an input column beside a sticky result rail (stacks on phones). */
+:root{
+  --bg:#f3f6f8; --surface:#ffffff; --surface-2:#eaf0f4; --ink:#13212c; --muted:#566874; --line:#d5dee5;
+  --accent:#1b4f8a; --accent-ink:#ffffff; --focus:#2f7de1;
+  --cat-a:#e7ef7c; --cat-b:#f8d24a; --cat-c:#f4a057; --cat-d:#ee6f5e; --cat-e:#e8466f; --on-cat:#1f1712;
+  --cor1:#76c97f; --cor2a:#f6d34a; --cor2b:#f2a057; --cor3nb:#f07a95; --cor3h:#a51d2d; --on-harm:#ffffff;
+  --ok:#2e7d4f; --warn:#a2620b; --bad:#b3261e; --ok-bg:#e3f3e8; --warn-bg:#fbf0dc; --bad-bg:#fbe5e3;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif; --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e151b; --surface:#151f28; --surface-2:#1c2833; --ink:#e4ecf1; --muted:#97a8b4; --line:#2a3946;
+  --accent:#86b6ee; --accent-ink:#0e151b; --focus:#86b6ee;
+  --cat-a:#d4dc6a; --cat-b:#e9c241; --cat-c:#e8944d; --cat-d:#e46655; --cat-e:#df4268;
+  --cor1:#6cc076; --cor2a:#e9c641; --cor2b:#e7964f; --cor3nb:#e87590; --cor3h:#c4384a;
+  --ok:#7fd29d; --warn:#f0bb62; --bad:#ff8a80; --ok-bg:#16301f; --warn-bg:#33270f; --bad-bg:#3a1a19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e151b; --surface:#151f28; --surface-2:#1c2833; --ink:#e4ecf1; --muted:#97a8b4; --line:#2a3946;
+  --accent:#86b6ee; --accent-ink:#0e151b; --focus:#86b6ee;
+  --cat-a:#d4dc6a; --cat-b:#e9c241; --cat-c:#e8944d; --cat-d:#e46655; --cat-e:#df4268;
+  --cor1:#6cc076; --cor2a:#e9c641; --cor2b:#e7964f; --cor3nb:#e87590; --cor3h:#c4384a;
+  --ok:#7fd29d; --warn:#f0bb62; --bad:#ff8a80; --ok-bg:#16301f; --warn-bg:#33270f; --bad-bg:#3a1a19; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.005em}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:flex-end;justify-content:space-between;padding-block:18px 14px}
+header.top h1{font-size:1.65rem;font-weight:800;font-stretch:85%}
+header.top p{margin:2px 0 0;color:var(--muted);font-size:.86rem;max-width:62ch}
+.hdr-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:600 .84rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+.sticky{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs a{flex:0 0 auto;display:flex;gap:8px;align-items:center;padding:11px 14px 10px;text-decoration:none;color:var(--muted);font:600 .9rem var(--f-body);border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs a .step{font:600 .72rem var(--f-mono);border:1px solid currentColor;border-radius:50%;width:20px;height:20px;display:grid;place-items:center}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs a[aria-current="page"] .step{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.strip{display:flex;gap:6px 18px;flex-wrap:wrap;align-items:center;padding-block:8px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+.strip b{color:var(--ink);font-family:var(--f-mono);font-weight:600}
+.strip .chip{margin-right:2px}
+
+.example{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--warn-bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:.85rem;margin-top:16px}
+.example strong{color:var(--warn)}
+
+main{padding-block:18px 60px}
+section.view[hidden]{display:none}
+.intro{color:var(--muted);max-width:75ch;margin:0 0 14px;font-size:.92rem}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:20px;align-items:start}
+.grid.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){.grid,.grid.even{grid-template-columns:minmax(0,1fr)}}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 112px);display:flex;flex-direction:column;gap:14px}
+@media (max-width:900px){.rail{position:static}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card h2{font-size:1.08rem;font-weight:700;margin-bottom:2px}
+.card h3{font-size:.95rem;font-weight:700}
+.card .sub{color:var(--muted);font-size:.82rem;margin:0 0 12px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.8rem;font-weight:600;color:var(--ink)}
+.field .hint{font-size:.74rem;color:var(--muted)}
+.field.auto label::after{content:"auto";font:600 .62rem var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-left:6px}
+select,input[type=number]{font:500 .9rem var(--f-body);color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;min-width:0}
+input[type=number]{font-family:var(--f-mono)}
+select:hover,input:hover{border-color:var(--muted)}
+.field.set select,.field.set input{border-color:var(--accent)}
+.unit{display:flex;align-items:center;gap:6px}
+.unit span{font-size:.75rem;color:var(--muted);white-space:nowrap}
+
+.score{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:start}
+.score .val{font:600 1.9rem/1 var(--f-mono);text-align:right}
+.score .cls{grid-column:1/-1;font-size:.86rem}
+.pill{display:inline-block;font:700 .72rem var(--f-body);letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.na{background:var(--surface-2);color:var(--muted)}
+details.br{margin-top:8px;font-size:.82rem}
+details.br summary{cursor:pointer;color:var(--accent);font-weight:600}
+table.pts{width:100%;border-collapse:collapse;margin-top:6px;font-size:.82rem}
+table.pts td{padding:4px 0;border-bottom:1px solid var(--line)}
+table.pts td:last-child{text-align:right;font-family:var(--f-mono);white-space:nowrap;padding-left:10px}
+table.pts tr.on td{color:var(--ink);font-weight:600} table.pts tr.off td{color:var(--muted)}
+.score-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+
+/* Category */
+.chip{display:inline-flex;align-items:center;justify-content:center;font:800 .82rem var(--f-display);font-stretch:85%;min-width:32px;padding:2px 7px;border-radius:5px;color:var(--on-cat)}
+.c-A{background:var(--cat-a)}.c-B{background:var(--cat-b)}.c-C{background:var(--cat-c)}.c-D{background:var(--cat-d)}.c-E{background:var(--cat-e)}
+.catbig{display:flex;gap:16px;align-items:center}
+.catbig .chip{font-size:2.4rem;min-width:96px;padding:10px 14px;border-radius:10px;line-height:1}
+.catbig .t{font:700 1.05rem var(--f-display)}
+.catbig .d{font-size:.85rem;color:var(--muted)}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:14px}
+.scale div{font:700 .72rem var(--f-body);text-align:center;padding:6px 2px;border-radius:4px;color:var(--on-cat);opacity:.38}
+.scale div.cur{opacity:1;outline:2px solid var(--ink);outline-offset:1px}
+.scale-l{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:4px}
+ul.why{margin:10px 0 0;padding-left:18px;font-size:.84rem} ul.why li{margin:2px 0}
+.note{font-size:.8rem;color:var(--muted);border-left:3px solid var(--line);padding:2px 0 2px 10px;margin-top:10px}
+.note.warn{border-color:var(--warn);color:var(--ink)}
+
+.recs h3{margin:18px 0 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-family:var(--f-body)}
+.recs h3:first-child{margin-top:0}
+.rec{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.rec .badge{display:flex;flex-direction:column;align-items:center;gap:2px}
+.cor{font:700 .74rem var(--f-mono);padding:3px 0;border-radius:4px;width:52px;text-align:center;color:var(--on-cat)}
+.cor.k1{background:var(--cor1)}.cor.k2a{background:var(--cor2a)}.cor.k2b{background:var(--cor2b)}.cor.k3nb{background:var(--cor3nb)}.cor.k3h{background:var(--cor3h);color:var(--on-harm)}
+.loe{font:500 .66rem var(--f-mono);color:var(--muted)}
+.rec p{margin:0;font-size:.88rem}
+.rec .src{font-size:.72rem;color:var(--muted);margin-top:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.74rem;color:var(--muted);align-items:center}
+.legend .cor{width:auto;padding:2px 6px}
+
+.tbl-wrap{overflow-x:auto}
+table.t7{border-collapse:collapse;width:100%;min-width:560px;font-size:.8rem}
+table.t7 th,table.t7 td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+table.t7 th{background:var(--surface-2);font-weight:700}
+table.t7 tr.cur td{background:var(--warn-bg);font-weight:600}
+table.t7 td .cor{width:auto;padding:1px 5px;font-size:.68rem}
+
+/* Pathway */
+ol.path{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+ol.path li{position:relative;padding:8px 0 8px 30px;font-size:.88rem;color:var(--muted)}
+ol.path li::before{content:"";position:absolute;left:8px;top:13px;width:10px;height:10px;border-radius:50%;border:2px solid var(--line);background:var(--surface)}
+ol.path li::after{content:"";position:absolute;left:13px;top:25px;bottom:-8px;width:2px;background:var(--line)}
+ol.path li:last-child::after{display:none}
+ol.path li.on{color:var(--ink)} ol.path li.on::before{background:var(--accent);border-color:var(--accent)}
+ol.path li.end{font-weight:700} ol.path li.end.ok{color:var(--ok)} ol.path li.end.bad{color:var(--bad)}
+.outcome{font:700 1.2rem var(--f-display);margin:2px 0 4px}
+.outcome.ok{color:var(--ok)}.outcome.bad{color:var(--bad)}.outcome.warn{color:var(--warn)}
+
+.checklist{columns:2 260px;column-gap:20px;font-size:.84rem;margin:6px 0 0;padding-left:18px}
+.checklist li{break-inside:avoid;margin:2px 0}
+footer{color:var(--muted);font-size:.78rem;border-top:1px solid var(--line);padding-block:18px 30px}
+footer p{max-width:90ch;margin:4px 0}
+@media (prefers-reduced-motion:no-preference){.chip,.scale div{transition:opacity .2s,background .2s}}
+</style>
+
+<header class="top"><div class="wrap">
+  <div>
+    <h1>Acute PE Navigator</h1>
+    <p>Pretest probability, severity scores, AHA/ACC Clinical Category (A–E, with R modifier) and category-matched management, built from the 2026 AHA/ACC/ACCP/ACEP/CHEST/SCAI/SHM/SIR/SVM/SVN acute PE guideline.</p>
+  </div>
+  <div class="hdr-actions">
+    <button class="btn" id="btnExample" type="button">Load example patient</button>
+    <button class="btn" id="btnClear" type="button">Clear all</button>
+  </div>
+</div></header>
+
+<div class="sticky"><div class="wrap">
+  <nav class="tabs" aria-label="Steps">
+    <a href="#patient" data-v="patient"><span class="step">1</span>Patient data</a>
+    <a href="#diagnosis" data-v="diagnosis"><span class="step">2</span>Suspected PE</a>
+    <a href="#severity" data-v="severity"><span class="step">3</span>Severity scores</a>
+    <a href="#category" data-v="category"><span class="step">4</span>Category &amp; management</a>
+    <a href="#followup" data-v="followup"><span class="step">5</span>Duration &amp; follow-up</a>
+  </nav>
+  <div class="strip" id="strip" aria-live="polite"></div>
+</div></div>
+
+<div class="wrap">
+  <div class="example" id="exampleBanner"><strong>Example patient loaded.</strong> These values are illustrative, not a real patient. Replace them with your own, or press Clear all.</div>
+</div>
+
+<main class="wrap">
+  <!-- 1 PATIENT -->
+  <section class="view" id="v-patient">
+    <p class="intro">Enter values once here. Every score in the later steps reads from them, the way a MELD calculator reuses one set of labs. Fields left blank are treated as not present and flagged.</p>
+    <div class="grid even">
+      <div class="col">
+        <div class="card"><h2>Demographics &amp; vital signs</h2><p class="sub">Use values at diagnosis.</p><div class="fields" id="f-vitals"></div></div>
+        <div class="card"><h2>History</h2><div class="fields" id="f-history"></div></div>
+      </div>
+      <div class="col">
+        <div class="card"><h2>Labs</h2><div class="fields" id="f-labs"></div></div>
+        <div class="card"><h2>Imaging</h2><p class="sub">Abnormal RV: echo RV/LV &gt;0.9, RV EDD ≥30 mm (PLAX) or basal ≥41 mm, TAPSE &lt;17 mm, TDI S′ &lt;9.5 cm/s, McConnell sign; CT RV/LV ≥1.0 (Table 4).</p><div class="fields" id="f-imaging"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 DIAGNOSIS -->
+  <section class="view" id="v-diagnosis" hidden>
+    <p class="intro">Figure 1 pathway: estimate clinical probability, apply PERC when probability is low, then D-dimer with YEARS criteria (or age-adjusted D-dimer) when probability is low or intermediate. High probability goes straight to imaging.</p>
+    <div class="grid">
+      <div class="col">
+        <div class="card"><h2>Clinical findings</h2><p class="sub">Shared by Wells, Geneva, PERC and YEARS. Heart rate, age, SpO₂ and cancer come from step 1.</p><div class="fields" id="f-clin"></div></div>
+        <div class="score-grid" id="dxScores"></div>
+        <div class="card"><h2>Testing</h2><div class="fields" id="f-dx"></div></div>
+      </div>
+      <div class="rail" id="dxRail"></div>
+    </div>
+  </section>
+
+  <!-- 3 SEVERITY -->
+  <section class="view" id="v-severity" hidden>
+    <p class="intro">Table 6 risk scores. PESI, sPESI, Bova, CPES, shock index and NEWS2 are calculated from step 1. Answer the Hestia questions below. Open “Points” on any card to see how the score was built.</p>
+    <div class="score-grid" id="sevScores"></div>
+    <div class="card" style="margin-top:14px"><h2>Hestia criteria</h2><p class="sub">Any “Yes” makes Hestia positive: consider hospitalization. All “No”: consider outpatient treatment.</p><div class="fields" id="f-hestia"></div></div>
+  </section>
+
+  <!-- 4 CATEGORY -->
+  <section class="view" id="v-category" hidden>
+    <p class="intro">Figure 2 assigns the most severe category supported by the clinical, laboratory and imaging findings. Figure 3, Table 7 and the section recommendations below are filtered to that category. Reassess as the patient changes; categories can move.</p>
+    <div class="grid">
+      <div class="col">
+        <div class="card"><h2>Presentation</h2><div class="fields" id="f-pres"></div></div>
+        <div class="card"><h2>Hemodynamics &amp; perfusion</h2><p class="sub">Any hypoperfusion marker without persistent hypotension = normotensive shock (D2).</p><div class="fields" id="f-hemo"></div></div>
+        <div class="card"><h2>Respiratory status</h2><div class="fields" id="f-resp"></div></div>
+        <div class="card"><h2>Treatment modifiers</h2><p class="sub">These adjust agent choice and the advanced-therapy options.</p><div class="fields" id="f-mod"></div></div>
+      </div>
+      <div class="rail">
+        <div class="card" id="catCard"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:baseline">
+        <h2 id="mgmtTitle">Management</h2>
+        <div class="legend"><span class="cor k1">1</span>Strong <span class="cor k2a">2a</span>Moderate <span class="cor k2b">2b</span>Weak <span class="cor k3nb">3:NB</span>No benefit <span class="cor k3h">3:Harm</span>Harm</div>
+      </div>
+      <div class="recs" id="mgmt"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Advanced therapy by category</h2><p class="sub">Table 7, COR and LOE. The current category row is highlighted.</p>
+      <div class="tbl-wrap"><table class="t7" id="t7"></table></div>
+    </div>
+  </section>
+
+  <!-- 5 FOLLOW-UP -->
+  <section class="view" id="v-followup" hidden>
+    <p class="intro">Section 5: the initial treatment phase lasts 3 to 6 months. Whether to continue into the extended phase depends on the risk factor present when the PE occurred (Table 9).</p>
+    <div class="grid">
+      <div class="col">
+        <div class="card"><h2>VTE risk factor at the time of PE</h2><div class="fields" id="f-fu"></div>
+          <div class="tbl-wrap" style="margin-top:12px"><table class="t7" style="min-width:520px">
+            <tr><th>Major reversible</th><th>Minor reversible</th><th>Persistent</th></tr>
+            <tr><td>Surgery with general anesthesia ≥30 min<br>Hospitalization for acute medical illness ≥72 h confined to bed<br>Cesarean section<br>Lower limb fracture</td>
+            <td>Surgery with general anesthesia &lt;30 min<br>Hospitalization for acute medical illness &lt;72 h<br>Out-of-hospital acute illness ≥72 h confined to bed<br>Estrogen therapy<br>Peripartum<br>Trauma with decreased mobility ≥72 h</td>
+            <td>Active cancer with or without ongoing treatment<br>Autoimmune disease (eg, RA, SLE)<br>Inflammatory bowel disease<br>Chronic immobility</td></tr>
+          </table></div>
+        </div>
+      </div>
+      <div class="rail"><div class="card"><div class="recs" id="fuOut"></div></div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><h2>Follow-up care</h2><div class="recs" id="fuCare"></div></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p><strong>Source:</strong> Creager MA, Barnes GD, Giri J, et al. 2026 AHA/ACC/ACCP/ACEP/CHEST/SCAI/SHM/SIR/SVM/SVN guideline for the evaluation and management of acute pulmonary embolism in adults. <em>Circulation</em>. 2026;153:e977–e1051. doi:10.1161/CIR.0000000000001415. Figures 1–3, Tables 3–9 and the section recommendations.</p>
+  <p>Clinical decision support for trained clinicians. It does not replace clinical judgment, multidisciplinary PERT input, or local protocols. Check drug dosing against the product label. Not affiliated with or endorsed by the guideline's authors or societies.</p>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const YN=[["","—"],["0","No"],["1","Yes"]];
+const F={
+  vitals:[
+    {id:"age",t:"num",l:"Age",u:"years",min:18,max:120},
+    {id:"sex",t:"sel",l:"Sex",o:[["","—"],["m","Male"],["f","Female"]]},
+    {id:"hr",t:"num",l:"Heart rate",u:"bpm"},
+    {id:"sbp",t:"num",l:"Systolic BP",u:"mm Hg"},
+    {id:"rr",t:"num",l:"Respiratory rate",u:"/min"},
+    {id:"temp",t:"num",l:"Temperature",u:"°C",step:"0.1"},
+    {id:"spo2",t:"num",l:"SpO₂",u:"%"},
+    {id:"o2",t:"sel",l:"Oxygen",o:[["","—"],["air","Room air"],["supp","Supplemental O₂"]]},
+    {id:"ams",t:"sel",l:"Mental status",o:[["","—"],["0","Alert, baseline"],["1","Altered / new confusion"]],h:"Disorientation, lethargy, stupor or coma"},
+    {id:"wt",t:"num",l:"Weight",u:"kg"},
+    {id:"bmi",t:"num",l:"BMI",u:"kg/m²",step:"0.1"},
+  ],
+  history:[
+    {id:"cancer",t:"sel",l:"Active cancer",o:YN,h:"Treatment within 6 months or palliative"},
+    {id:"hf",t:"sel",l:"Heart failure",o:YN},
+    {id:"lung",t:"sel",l:"Chronic lung disease",o:YN},
+    {id:"prior",t:"sel",l:"Previous DVT or PE",o:YN},
+    {id:"oncoag",t:"sel",l:"On therapeutic anticoagulation now",o:YN,h:"D-dimer strategies were not validated in these patients"},
+    {id:"preg",t:"sel",l:"Pregnant",o:YN},
+  ],
+  labs:[
+    {id:"tnt",t:"sel",l:"Cardiac troponin",o:[["","Not measured"],["n","Normal"],["e","Elevated"]]},
+    {id:"bnp",t:"sel",l:"BNP / NT-proBNP",o:[["","Not measured"],["n","Normal"],["e","Elevated"]]},
+    {id:"lac",t:"num",l:"Lactate (venous or arterial)",u:"mmol/L",step:"0.1",h:">2 mmol/L is a hypoperfusion marker"},
+    {id:"dd",t:"num",l:"D-dimer (FEU)",u:"ng/mL",h:"1 ng/mL = 1 μg/L"},
+  ],
+  imaging:[
+    {id:"rv",t:"sel",l:"RV size / function",o:[["","Not assessed"],["n","Normal"],["a","Abnormal (dilated or dysfunction)"]]},
+    {id:"rvsev",t:"sel",l:"Moderately or severely reduced RV function",o:YN,h:"Used by CPES"},
+    {id:"ext",t:"sel",l:"Most proximal clot",o:[["","—"],["sub","Subsegmental only (single or multiple)"],["seg","Segmental or more proximal"]]},
+    {id:"saddle",t:"sel",l:"Central thrombus (saddle PE)",o:YN},
+    {id:"dvt",t:"sel",l:"Concomitant DVT",o:YN},
+    {id:"cit",t:"sel",l:"Clot-in-transit (free-floating right-heart thrombus)",o:YN},
+  ],
+  clin:[
+    {id:"w_dvt",t:"sel",l:"Clinical signs of DVT",o:YN,h:"Leg swelling, pain with palpation"},
+    {id:"w_ml",t:"sel",l:"PE is the most likely diagnosis",o:YN},
+    {id:"w_imm",t:"sel",l:"Immobilization ≥3 d or surgery in past 4 wk",o:YN},
+    {id:"hemop",t:"sel",l:"Hemoptysis",o:YN},
+    {id:"g_surg",t:"sel",l:"Surgery (general anesthesia) or lower-limb fracture ≤1 mo",o:YN},
+    {id:"g_pain",t:"sel",l:"Unilateral lower-limb pain",o:YN},
+    {id:"g_palp",t:"sel",l:"Pain on deep-vein palpation and unilateral edema",o:YN},
+    {id:"p_estr",t:"sel",l:"Estrogen use",o:YN},
+    {id:"p_leg",t:"sel",l:"Unilateral leg swelling",o:YN},
+    {id:"p_surg",t:"sel",l:"Surgery or trauma requiring hospitalization ≤4 wk",o:YN},
+  ],
+  dx:[
+    {id:"ptp",t:"sel",l:"Clinical pretest probability",o:[["auto","Auto from Wells score"],["low","Low (<15%)"],["int","Intermediate (15–50%)"],["high","High (>50%)"]],h:"Validated tool or clinical gestalt"},
+    {id:"cus",t:"sel",l:"Pregnant with leg symptoms: compression US",o:[["","Not done"],["pos","Positive for DVT"],["neg","Negative"]],h:"Pregnancy-adapted YEARS"},
+  ],
+  hestia:[
+    ["h1","Hemodynamically unstable?"],["h2","Thrombolysis or embolectomy necessary?"],["h3","Active bleeding or high risk of bleeding?"],
+    ["h4",">24 h of oxygen needed to keep SpO₂ >90%?"],["h5","PE diagnosed during anticoagulant treatment?"],["h6","Severe pain needing IV analgesia >24 h?"],
+    ["h7","Medical or social reason for admission >24 h?"],["h8","Creatinine clearance <30 mL/min?"],["h9","Severe liver impairment?"],
+    ["h10","Pregnant?"],["h11","Documented history of HIT?"]
+  ].map(a=>({id:a[0],t:"sel",l:a[1],o:YN})),
+  pres:[
+    {id:"symp",t:"sel",l:"Presentation",o:[["s","Symptomatic"],["i","Incidental and asymptomatic"]]},
+    {id:"sevbasis",t:"sel",l:"Clinical severity score used",o:[["any","PESI, sPESI or Bova (any elevated)"],["pesi","PESI only"],["spesi","sPESI only"],["bova","Bova only"],["hestia","Hestia only"]],h:"Elevated: PESI >85, sPESI ≥1, Bova >4, Hestia ≥1"},
+  ],
+  hemo:[
+    {id:"bp",t:"sel",l:"Blood pressure course",o:[["norm","No hypotension"],["trans","Transient hypotension (<15 min or fluid-responsive)"],["pers","Recurrent or persistent hypotension with cardiogenic shock"],["refr","Refractory cardiogenic shock (SCAI D–E) or cardiac arrest"]],h:"Hypotension: SBP <90 or drop >40 mm Hg"},
+    {id:"m_aki",t:"sel",l:"Acute kidney injury",o:YN},
+    {id:"m_uo",t:"sel",l:"Urine output <0.5 mL/kg/h",o:YN},
+    {id:"m_ci",t:"sel",l:"Cardiac index ≤2.2 L/min/m²",o:YN},
+    {id:"m_map",t:"sel",l:"MAP <60 mm Hg",o:YN},
+    {id:"m_scai",t:"sel",l:"Increased shock score (SCAI B/C) or CPES 6",o:YN},
+  ],
+  resp:[
+    {id:"resp",t:"sel",l:"Respiratory support",o:[["auto","Auto from SpO₂, RR and O₂"],["0","None: SpO₂ ≥90%, RR <30, room air"],["1","SpO₂ <90%, RR ≥30, or needs supplemental O₂"],["2",">6 L nasal cannula or nonrebreather mask"],["3","NIV or invasive ventilation (respiratory failure)"]]},
+  ],
+  mod:[
+    {id:"bleed",t:"sel",l:"Bleeding risk for thrombolysis",o:[["ok","Acceptable"],["high","High / contraindicated"]]},
+    {id:"acci",t:"sel",l:"Absolute contraindication to anticoagulation",o:YN},
+    {id:"setting",t:"sel",l:"Diagnosed in",o:[["ed","ED or clinic"],["inp","Inpatient"]]},
+    {id:"bf",t:"sel",l:"Breastfeeding",o:YN},
+    {id:"ckd",t:"sel",l:"Chronic kidney disease",o:[["","None / stage 1"],["23","Stage 2–3"],["45","Stage 4–5 or ESKD on dialysis"]]},
+    {id:"liver",t:"sel",l:"Chronic liver disease",o:[["","None"],["A","Child-Pugh A"],["B","Child-Pugh B"],["C","Child-Pugh C"]]},
+    {id:"aps",t:"sel",l:"Antiphospholipid syndrome",o:[["","None"],["apsT","Established thrombotic APS"],["aps1","Single antibody (aCL or β2-GPI)"]]},
+    {id:"brain",t:"sel",l:"Primary or metastatic brain tumor",o:YN},
+    {id:"bari",t:"sel",l:"Bariatric surgery within 4 weeks",o:YN},
+    {id:"icu",t:"sel",l:"In the ICU",o:YN},
+  ],
+  fu:[
+    {id:"rf",t:"sel",l:"Risk factor",o:[["","—"],["major","Major reversible"],["minor","Minor reversible"],["pers","Persistent (non-cancer)"],["cancer","Active cancer"],["none","None identified (unprovoked)"]]},
+    {id:"first",t:"sel",l:"Episode",o:[["1","First PE"],["2","Recurrent VTE"]]},
+    {id:"doacci",t:"sel",l:"Contraindication to DOAC",o:YN},
+    {id:"noac",t:"sel",l:"Contraindication to or refuses anticoagulation",o:YN},
+    {id:"recur",t:"sel",l:"New PE while on anticoagulation",o:[["","No"],["adh","Yes, adherent at therapeutic intensity"],["red","Yes, on reduced-dose DOAC"],["lmwh","Yes, cancer on LMWH"],["sub","Yes, subtherapeutic or nonadherent"]]},
+    {id:"symp3",t:"sel",l:"Still symptomatic 3–6 months after PE",o:YN},
+    {id:"young",t:"sel",l:"Family history of thrombosis or age <55",o:YN},
+    {id:"cbp",t:"sel",l:"Childbearing potential",o:YN},
+  ]
+};
+const DEFAULTS={symp:"s",sevbasis:"any",bp:"norm",resp:"auto",bleed:"ok",setting:"ed",ptp:"auto",first:"1"};
+const EXAMPLE={age:68,sex:"m",hr:115,sbp:105,rr:24,temp:36.8,spo2:89,o2:"air",ams:"0",wt:82,bmi:27.4,cancer:"1",hf:"0",lung:"0",prior:"0",oncoag:"0",preg:"0",
+  tnt:"e",bnp:"e",lac:1.6,dd:2400,rv:"a",rvsev:"1",ext:"seg",saddle:"0",dvt:"1",cit:"0",
+  w_dvt:"1",w_ml:"1",w_imm:"0",hemop:"0",g_surg:"0",g_pain:"1",g_palp:"1",p_estr:"0",p_leg:"1",p_surg:"0",
+  h1:"0",h2:"0",h3:"0",h4:"0",h5:"0",h6:"0",h7:"1",h8:"0",h9:"0",h10:"0",h11:"0",
+  m_aki:"0",m_uo:"0",m_ci:"0",m_map:"0",m_scai:"0",bf:"0",brain:"0",bari:"0",icu:"0",acci:"0",
+  rf:"cancer",doacci:"0",noac:"0",symp3:"0",young:"0",cbp:"0"};
+
+/* ---------- render forms ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function fieldHTML(f){
+  const hint=f.h?`<span class="hint">${esc(f.h)}</span>`:"";
+  if(f.t==="num"){
+    return `<div class="field" data-f="${f.id}"><label for="${f.id}">${esc(f.l)}</label><div class="unit"><input type="number" inputmode="decimal" id="${f.id}" ${f.step?`step="${f.step}"`:""} ${f.min!=null?`min="${f.min}"`:""} ${f.max!=null?`max="${f.max}"`:""}><span>${esc(f.u||"")}</span></div>${hint}</div>`;
+  }
+  return `<div class="field" data-f="${f.id}"><label for="${f.id}">${esc(f.l)}</label><select id="${f.id}">${f.o.map(o=>`<option value="${o[0]}">${esc(o[1])}</option>`).join("")}</select>${hint}</div>`;
+}
+for(const k in F){const el=document.getElementById("f-"+k); if(el) el.innerHTML=F[k].map(fieldHTML).join("");}
+const ALL=Object.values(F).flat().map(f=>f.id);
+
+/* ---------- state ---------- */
+function v(id){const el=document.getElementById(id); if(!el) return ""; return el.value;}
+function n(id){const s=v(id); if(s===""||s==null) return null; const x=parseFloat(s); return isNaN(x)?null:x;}
+function yes(id){return v(id)==="1";}
+function setAll(obj){
+  ALL.forEach(id=>{const el=document.getElementById(id); if(!el) return;
+    const val=obj[id]!=null?String(obj[id]):(DEFAULTS[id]!=null?DEFAULTS[id]:"");
+    el.value=val;});
+}
+// keep Pregnant in history and Hestia in sync
+function syncPair(a,b){const A=document.getElementById(a),B=document.getElementById(b);
+  A.addEventListener("change",()=>{B.value=A.value;compute();}); B.addEventListener("change",()=>{A.value=B.value;compute();});}
+
+/* ---------- scores ---------- */
+function wells(){
+  const hr=n("hr"); const it=[
+    ["Clinical signs of DVT",3,yes("w_dvt")],["PE more likely than other diagnoses",3,yes("w_ml")],
+    ["Heart rate >100 bpm",1.5,hr!=null&&hr>100],["Immobilization ≥3 d or surgery ≤4 wk",1.5,yes("w_imm")],
+    ["Previous DVT or PE",1.5,yes("prior")],["Hemoptysis",1,yes("hemop")],["Cancer",1,yes("cancer")]];
+  const s=it.reduce((a,x)=>a+(x[2]?x[1]:0),0);
+  const std=s<2?"Low":s<=6?"Moderate":"High"; const mod=s>4?"PE likely":"PE unlikely";
+  return {s,it,std,mod};
+}
+function geneva(){
+  const age=n("age"),hr=n("hr");
+  const it=[["Age >65",1,1,age!=null&&age>65],["Previous DVT or PE",3,1,yes("prior")],["Surgery or lower-limb fracture ≤1 mo",2,1,yes("g_surg")],
+    ["Active cancer",2,1,yes("cancer")],["Unilateral lower-limb pain",3,1,yes("g_pain")],["Hemoptysis",2,1,yes("hemop")],
+    ["Heart rate 75–94 bpm",3,1,hr!=null&&hr>=75&&hr<95],["Heart rate ≥95 bpm",5,2,hr!=null&&hr>=95],["Deep-vein palpation pain and unilateral edema",4,1,yes("g_palp")]];
+  const r=it.reduce((a,x)=>a+(x[3]?x[1]:0),0), sm=it.reduce((a,x)=>a+(x[3]?x[2]:0),0);
+  return {r,sm,it,rc:r<=3?"Low":r<=10?"Intermediate":"High",sc:sm<=1?"Low":sm<=4?"Intermediate":"High",two:sm<=2?"PE unlikely":"PE likely"};
+}
+function perc(){
+  const age=n("age"),hr=n("hr"),sp=n("spo2");
+  const it=[["Age <50",age!=null?age<50:null],["Heart rate <100",hr!=null?hr<100:null],["SpO₂ ≥95%",sp!=null?sp>=95:null],
+    ["No hemoptysis",v("hemop")===""?null:!yes("hemop")],["No estrogen use",v("p_estr")===""?null:!yes("p_estr")],["No prior DVT or PE",v("prior")===""?null:!yes("prior")],
+    ["No unilateral leg swelling",v("p_leg")===""?null:!yes("p_leg")],["No surgery/trauma requiring hospitalization ≤4 wk",v("p_surg")===""?null:!yes("p_surg")]];
+  const unk=it.filter(x=>x[1]===null).length, fail=it.filter(x=>x[1]===false).length;
+  return {it,unk,fail,neg:fail===0&&unk===0};
+}
+function pesi(){
+  const age=n("age"),hr=n("hr"),sbp=n("sbp"),rr=n("rr"),t=n("temp"),sp=n("spo2");
+  const it=[["Age",age||0,age!=null],["Male sex",10,v("sex")==="m"],["History of cancer",30,yes("cancer")],["Heart failure",10,yes("hf")],["Chronic lung disease",10,yes("lung")],
+    ["Heart rate ≥110",20,hr!=null&&hr>=110],["Systolic BP <100",30,sbp!=null&&sbp<100],["Respiratory rate ≥30",20,rr!=null&&rr>=30],["Temperature <36 °C",20,t!=null&&t<36],
+    ["Altered mental status",60,v("ams")==="1"],["SpO₂ <90%",20,sp!=null&&sp<90]];
+  if(age==null) return {s:null,it};
+  const s=it.reduce((a,x)=>a+(x[2]?x[1]:0),0);
+  const c=s<=65?"I":s<=85?"II":s<=105?"III":s<=125?"IV":"V";
+  return {s,it,c,el:s>85};
+}
+function spesi(){
+  const age=n("age"),hr=n("hr"),sbp=n("sbp"),sp=n("spo2");
+  const it=[["Age >80",age!=null&&age>80],["History of cancer",yes("cancer")],["Chronic cardiopulmonary disease",yes("hf")||yes("lung")],["Systolic BP <100",sbp!=null&&sbp<100],["Heart rate ≥110",hr!=null&&hr>=110],["SpO₂ <90%",sp!=null&&sp<90]];
+  const s=it.filter(x=>x[1]).length; return {s,it,el:s>=1,missing:age==null||hr==null||sbp==null||sp==null};
+}
+function bova(){
+  const sbp=n("sbp"),hr=n("hr");
+  const it=[["Systolic BP 90–100 mm Hg",2,sbp!=null&&sbp>=90&&sbp<=100],["Cardiac troponin elevated",2,v("tnt")==="e"],["RV dysfunction",2,v("rv")==="a"],["Heart rate ≥110",1,hr!=null&&hr>=110]];
+  const s=it.reduce((a,x)=>a+(x[2]?x[1]:0),0); const st=s<=2?"I":s<=4?"II":"III";
+  return {s,it,st,el:s>4,missing:v("tnt")===""||v("rv")===""};
+}
+function hestia(){const ids=F.hestia.map(f=>f.id); const ans=ids.map(id=>v(id)); const pos=ans.filter(a=>a==="1").length; return {pos,unk:ans.filter(a=>a==="").length,el:pos>=1};}
+function cpes(){
+  const hr=n("hr");
+  const it=[["Elevated troponin",v("tnt")==="e"],["Elevated BNP",v("bnp")==="e"],["Moderately/severely reduced RV function",yes("rvsev")],["Central thrombus (saddle)",yes("saddle")],["Concomitant DVT",yes("dvt")],["Heart rate ≥100",hr!=null&&hr>=100]];
+  const s=it.filter(x=>x[1]).length; return {s,it,hi:s>=6};
+}
+function shockIdx(){const hr=n("hr"),s=n("sbp"); return hr!=null&&s?hr/s:null;}
+function news2(){
+  const rr=n("rr"),sp=n("spo2"),sbp=n("sbp"),hr=n("hr"),t=n("temp");
+  const band=(x,arr)=>{for(const [test,p] of arr){if(test(x))return p;}return 0;};
+  const it=[
+    ["Respiratory rate",rr,rr==null?null:band(rr,[[x=>x<=8,3],[x=>x<=11,1],[x=>x<=20,0],[x=>x<=24,2],[x=>true,3]])],
+    ["SpO₂ (scale 1)",sp,sp==null?null:band(sp,[[x=>x<=91,3],[x=>x<=93,2],[x=>x<=95,1],[x=>true,0]])],
+    ["Supplemental O₂",v("o2")==="supp"?"yes":v("o2")==="air"?"no":null,v("o2")===""?null:(v("o2")==="supp"?2:0)],
+    ["Systolic BP",sbp,sbp==null?null:band(sbp,[[x=>x<=90,3],[x=>x<=100,2],[x=>x<=110,1],[x=>x<=219,0],[x=>true,3]])],
+    ["Heart rate",hr,hr==null?null:band(hr,[[x=>x<=40,3],[x=>x<=50,1],[x=>x<=90,0],[x=>x<=110,1],[x=>x<=130,2],[x=>true,3]])],
+    ["Consciousness",v("ams")===""?null:(v("ams")==="1"?"new confusion":"alert"),v("ams")===""?null:(v("ams")==="1"?3:0)],
+    ["Temperature",t,t==null?null:band(t,[[x=>x<=35,3],[x=>x<=36,1],[x=>x<=38,0],[x=>x<=39,1],[x=>true,2]])]];
+  const missing=it.filter(x=>x[2]==null).length; const s=it.reduce((a,x)=>a+(x[2]||0),0);
+  return {s,it,missing,hi:s>=9};
+}
+
+/* ---------- category ---------- */
+const ORDER=["A","B1","B2","C1","C2","C3","D1","D2","E1","E2"];
+const idx=k=>ORDER.indexOf(k);
+const inR=(k,a,b)=>idx(k)>=idx(a)&&idx(k)<=idx(b);
+const CATINFO={
+  A:["Subclinical","Incidental and asymptomatic PE"],
+  B1:["Symptomatic, low clinical severity score","Subsegmental (single or multiple)"],
+  B2:["Symptomatic, low clinical severity score","Non-subsegmental"],
+  C1:["Symptomatic, elevated clinical severity score","Normal RV and normal biomarkers"],
+  C2:["Symptomatic, elevated clinical severity score","Abnormal RV or ≥1 abnormal biomarker"],
+  C3:["Symptomatic, elevated clinical severity score","Abnormal RV and ≥1 abnormal biomarker"],
+  D1:["Incipient cardiopulmonary failure","Transient hypotension"],
+  D2:["Incipient cardiopulmonary failure","Normotensive shock"],
+  E1:["Cardiopulmonary failure","Recurrent or persistent hypotension with cardiogenic shock"],
+  E2:["Cardiopulmonary failure","Refractory cardiogenic shock or cardiac arrest"]};
+function respLevel(){
+  const r=v("resp"); if(r!=="auto") return {lv:+r,auto:false};
+  const sp=n("spo2"),rr=n("rr");
+  return {lv:((sp!=null&&sp<90)||(rr!=null&&rr>=30)||v("o2")==="supp")?1:0,auto:true};
+}
+function severity(S){
+  const b=v("sevbasis"); const parts=[];
+  const P=S.pesi.s!=null?S.pesi.el:null, sp=S.spesi.missing&&!S.spesi.el?null:S.spesi.el, bo=S.bova.el?true:(S.bova.missing?null:false), he=S.hestia.unk===11?null:S.hestia.el;
+  let el;
+  if(b==="pesi"){el=P;parts.push(P==null?"PESI not calculable (age missing)":`PESI ${S.pesi.s} (${P?">85":"≤85"})`);}
+  else if(b==="spesi"){el=sp;parts.push(`sPESI ${S.spesi.s}`);}
+  else if(b==="bova"){el=bo;parts.push(`Bova ${S.bova.s}`);}
+  else if(b==="hestia"){el=he;parts.push(he==null?"Hestia not answered":`Hestia ${S.hestia.pos?"positive":"negative"}`);}
+  else{
+    const any=[P,sp,bo].some(x=>x===true); const allKnown=[P,sp].every(x=>x!=null);
+    el=any?true:(allKnown?false:null);
+    if(S.pesi.s!=null)parts.push(`PESI ${S.pesi.s}`); parts.push(`sPESI ${S.spesi.s}`); parts.push(`Bova ${S.bova.s}`);
+  }
+  return {el,txt:parts.join(", ")};
+}
+function category(S){
+  const why=[],notes=[];
+  const hyp=[]; const lac=n("lac");
+  if(lac!=null&&lac>2)hyp.push(`lactate ${lac} mmol/L`);
+  [["m_aki","acute kidney injury"],["m_uo","low urine output"],["ams","mental status change"],["m_ci","cardiac index ≤2.2"],["m_map","MAP <60"],["m_scai","increased shock score"]].forEach(([id,l])=>{if(yes(id))hyp.push(l);});
+  if(S.cpes.hi&&!yes("m_scai"))hyp.push("CPES 6");
+  const bp=v("bp"); let k;
+  const sev=severity(S);
+  if(bp==="refr"){k="E2";why.push("Refractory cardiogenic shock or cardiac arrest");}
+  else if(bp==="pers"){k="E1";why.push("Recurrent or persistent hypotension with cardiogenic shock");}
+  else if(hyp.length){k="D2";why.push("Hypoperfusion without persistent hypotension: "+hyp.join(", "));if(bp==="trans")why.push("Transient hypotension also present");}
+  else if(bp==="trans"){k="D1";why.push("Transient hypotension, no hypoperfusion markers");}
+  else if(v("symp")==="i"){k="A";why.push("Incidental, asymptomatic PE");}
+  else if(sev.el!==true){
+    k=v("ext")==="sub"?"B1":"B2";
+    why.push(sev.el===false?`Low clinical severity score (${sev.txt})`:`Severity score incomplete (${sev.txt}); treated as low until completed`);
+    why.push(v("ext")==="sub"?"Subsegmental clot only":"Segmental or more proximal clot");
+    if(sev.el==null)notes.push(["warn","Complete the severity score inputs in step 1. Category B assumes a low score."]);
+    if(v("ext")==="")notes.push(["","Clot extent not entered; B2 assumed."]);
+    if(v("rv")==="a"||v("tnt")==="e"||v("bnp")==="e")notes.push(["warn","RV or biomarker abnormality is present, but Figure 2 classifies Category B by severity score alone. Weigh it clinically; patients in A or B with significant comorbidity may also benefit from PERT."]);
+  } else {
+    const rvA=v("rv")==="a", bio=v("tnt")==="e"||v("bnp")==="e";
+    k=rvA&&bio?"C3":(rvA||bio)?"C2":"C1";
+    why.push(`Elevated clinical severity score (${sev.txt})`);
+    why.push(`RV ${v("rv")==="a"?"abnormal":v("rv")==="n"?"normal":"not assessed"}; troponin ${v("tnt")==="e"?"elevated":v("tnt")==="n"?"normal":"not measured"}; BNP ${v("bnp")==="e"?"elevated":v("bnp")==="n"?"normal":"not measured"}`);
+    if(v("rv")===""||(v("tnt")===""&&v("bnp")===""))notes.push(["warn","RV imaging and at least one cardiac biomarker are COR 1 in Category C. Until both are done, the subcategory may be underestimated."]);
+  }
+  const R=respLevel(); const tier=k[0]; let r=false;
+  if(tier==="C"&&R.lv>=1)r=true; if(tier==="D"&&R.lv>=2)r=true; if(tier==="E"&&R.lv>=3)r=true;
+  if(r)why.push("Respiratory modifier: "+["","SpO₂ <90%, RR ≥30 or supplemental O₂",">6 L nasal cannula or nonrebreather","hypoxemic or ventilatory failure"][R.lv]);
+  if((tier==="A"||tier==="B")&&R.lv>=1)notes.push(["warn","Hypoxemia or tachypnea in a patient scored as low severity: recheck the severity score inputs."]);
+  if(tier==="C"&&v("bp")==="norm"&&k==="C3")notes.push(["","In C3, a MAP <80 mm Hg may identify patients who need escalation (COR 2a, B-NR)."]);
+  return {k,r,full:k+(r?"R":""),why,notes,sev,resp:R};
+}
+
+/* ---------- recommendations ---------- */
+const CORK={"1":"k1","2a":"k2a","2b":"k2b","3:NB":"k3nb","3:Harm":"k3h"};
+const CORORDER={"1":0,"2a":1,"2b":2,"3:NB":3,"3:Harm":4};
+function R(cor,loe,text,src){return {cor,loe,text,src};}
+function recHTML(r){return `<div class="rec"><div class="badge"><span class="cor ${CORK[r.cor]}">${r.cor}</span><span class="loe">${r.loe}</span></div><div><p>${r.text}</p>${r.src?`<div class="src">${r.src}</div>`:""}</div></div>`;}
+function group(title,list){if(!list.length)return""; return `<h3>${title}</h3>`+list.map(recHTML).join("");}
+
+function management(C,S){
+  const k=C.k, G={ac:[],risk:[],dispo:[],support:[],adv:[],ivc:[],agent:[],no:[]};
+  const push=(g,r)=>{(r.cor==="3:NB"||r.cor==="3:Harm")?G.no.push(r):G[g].push(r);};
+  const bleedOK=v("bleed")==="ok", acCI=yes("acci");
+  const lysisQual=bleedOK?"":" <strong>Bleeding risk is marked high: systemic thrombolysis requires an acceptable bleeding risk.</strong>";
+
+  /* anticoagulation */
+  if(acCI){
+    push("ivc",R("1","B-R","Cannot receive anticoagulation and an IVC filter is needed: use a <strong>retrievable</strong> filter rather than a permanent one.","§4.3"));
+    push("ivc",R("2a","B-R","If anticoagulation cannot be tolerated, an IVC filter can reduce the short-term incidence of recurrent PE.","§4.3"));
+    push("ivc",R("1","C-LD","Attempt retrieval as soon as PE risk has fallen and anticoagulation is tolerated.","§4.3"));
+    push("ivc",R("2a","C-LD","Enroll patients with indwelling filters in a structured follow-up program to raise retrieval rates.","§4.3"));
+  } else {
+    push("ac",R("1","B-R","Start anticoagulation now to reduce recurrent VTE and death.","§4.2.1 rec 1"));
+    if(inR(k,"A","B2")) push("ac",R("1","B-R","<strong>Initiate a DOAC</strong> (preferred over VKA). Lead-in: apixaban 10 mg BID × 7 d, or rivaroxaban 15 mg BID × 21 d; dabigatran or edoxaban after ≥5 d of parenteral therapy.","Fig 3; §4.2.1 rec 3; §5.2"));
+    if(inR(k,"C1","E1")) push("ac",R("1","B-R","<strong>Initiate LMWH</strong>; preferred over UFH when parenteral therapy is needed (less recurrent VTE and major bleeding).","Fig 3; §4.2.1 rec 2"));
+    if(k==="E2") push("ac",R("1","C-LD","<strong>Initiate LMWH or UFH.</strong> On VA-ECMO, continue parenteral systemic anticoagulation unless bleeding.","Fig 3; §4.2.4 rec 1"));
+    if(inR(k,"C2","E2")) push("ac",R("2a","C-LD","If an endovascular procedure is likely, LMWH is reasonable over UFH. During CDL, give concurrent therapeutic LMWH or UFH (or subtherapeutic UFH) rather than none (COR 1). After a procedure or thrombolysis, LMWH is preferred over UFH (COR 1, B-NR).","§4.2.1 recs 18–20"));
+    if(inR(k,"C1","E2")) push("ac",R("1","B-R","When transitioning to oral therapy, choose a DOAC over a VKA unless contraindicated.","§4.2.1 rec 3"));
+  }
+
+  /* risk assessment & monitoring */
+  if(inR(k,"A","B2")) push("risk",R("1","B-R","Use Hestia, PESI and/or sPESI to confirm low short-term risk.","Fig 3; §3.2.1 rec 1"));
+  if(inR(k,"C1","D2")) push("risk",R("2a","B-NR","Use a validated PE-specific score (eg, Bova, CPES) to identify higher short-term risk. NEWS/NEWS2 is an alternative (COR 2b).","§3.2.1 recs 2–3"));
+  if(inR(k,"C1","C3")) push("risk",R("1","B-NR","Measure at least one cardiac biomarker (troponin or BNP).","Fig 3; §3.2.3 rec 1"));
+  if(inR(k,"C1","E2")) push("risk",R("1","B-NR","Measure lactate (venous or arterial).","Fig 3; §3.2.3 rec 2"));
+  if(inR(k,"C1","E1")) push("risk",R("1","A","Evaluate RV size and function with CT and/or echo. In C–D, echocardiography is preferred over CT for short-term risk stratification (COR 2a).","Fig 3; §3.2.4"));
+  if(k==="D2"||k==="D1") push("risk",R("2a","B-NR","Evaluate for normotensive shock: lactate >2 mmol/L, urine output <720 mL/24 h, creatinine rise ≥0.3 mg/dL in 24 h, or cardiac index ≤2.2.","Fig 3; §3.2.2 rec 1"));
+  if(k==="C3") push("risk",R("2a","B-NR","MAP <80 mm Hg may identify patients who need escalation of therapy.","§3.2.2 rec 2"));
+  if(inR(k,"A","C3")) push("risk",R("3:NB","B-NR","Do not quantify angiographic thrombus burden for short-term risk stratification.","§3.2.5"));
+
+  /* disposition */
+  if(inR(k,"A","B2")){
+    const H=S.hestia; const hs=H.unk===11?"Hestia not yet answered.":H.el?`Hestia positive (${H.pos} criterion${H.pos>1?"a":"on"}): consider hospitalization.`:(H.unk?`Hestia: no positives so far, ${H.unk} unanswered.`:"Hestia negative: outpatient treatment can be considered.");
+    if(v("setting")==="ed") push("dispo",R("2a","B-R","Use a decision tool (Hestia, PESI or sPESI) to judge suitability for outpatient treatment. "+hs,"Fig 3; §4.1.1 rec 1"));
+    push("dispo",R("2a","B-R","Outpatient treatment is reasonable for select patients when 90-day adverse outcome risk is low and it fits patient goals. Requires immediate access to anticoagulant and rapid, reliable follow-up.","§4.1.1 rec 2"));
+  }
+  if(inR(k,"C1","E2")) push("dispo",R("1","B-NR","<strong>Activate a multidisciplinary PERT</strong> to guide management.","Fig 3; §4.1.4"));
+  if(inR(k,"C3","D2")) push("dispo",R("2b","C-LD","If advanced therapies are unavailable, transfer to a center that offers them (surgical embolectomy, CDL, MT, ECMO, IVC filter) may be considered.","§4.1.3 rec 1"));
+  if(inR(k,"E1","E2")) push("dispo",R("3:Harm","C-EO","Do not transfer an unstable patient to another center before stabilizing their condition.","§4.1.3 rec 2"));
+  if(inR(k,"D1","E2")||k==="C3") push("dispo",R("1","C-EO","Patients receiving thrombolysis (systemic or CDL) belong in an ICU or intermediate care unit. After mechanical thrombectomy in a stable patient, a telemetry unit with experienced nursing is reasonable (COR 2a).","§4.1.2"));
+
+  /* support */
+  if(inR(k,"D2","E2")) push("support",R("1","C-LD","Vasopressors and/or inotropes to improve cardiac output and systemic perfusion.","Fig 3; §4.2.2 rec 1"));
+  if(k==="D1"||k==="D2") push("support",R("2b","C-LD","If reduced preload is suspected, cautious volume (small boluses ≤500 mL) may be considered. Avoid large or indiscriminate fluid loading.","§4.2.2 rec 2"));
+  if(inR(k,"C2","E2")) push("support",R("2b","B-R","Inhaled pulmonary vasodilators may be considered to reduce RV afterload.","§4.2.2 rec 3"));
+  if(C.resp.lv>=1) push("support",R("2a","C-LD","For moderate to severe hypoxia, heated high-flow nasal cannula is preferred over standard nasal cannula.","§4.2.3 rec 2"));
+  if(inR(k,"C1","E2")){
+    push("support",R("1","C-LD","If sedation for intubation is needed, have vasopressors, inotropes and/or VA-ECMO ready in case of collapse.","§4.2.3 rec 1"));
+    push("support",R("3:Harm","C-LD","Avoid deep sedation and mechanical ventilation unless clinically indicated, to prevent hemodynamic collapse.","§4.2.3 rec 3"));
+  }
+  if(k==="E2"){
+    push("support",R("2a","B-NR","<strong>VA-ECMO</strong> for refractory cardiogenic shock, if resources are available.","Fig 3; §4.2.4 rec 2"));
+    push("support",R("2b","C-LD","On VA-ECMO, the usefulness of additional advanced therapies is not well established.","§4.2.4 rec 3"));
+  }
+
+  /* advanced therapy (Table 7 + section recs) */
+  const T=t7row(k);
+  if(k==="E1"){
+    push("adv",R("2a","C-LD","Systemic thrombolysis (if acceptable bleeding risk), CDL, mechanical thrombectomy or surgical embolectomy, chosen with PERT. Lysis 2a C-LD; CDL 2a C-LD; MT 2a B-NR; surgery 2a B-NR."+lysisQual,"Fig 3; Table 7; §4.4"));
+  }
+  if(k==="E2"){
+    push("adv",R("2a","C-LD","Systemic thrombolysis if bleeding risk is acceptable. CDL and MT are not applicable in E2."+lysisQual,"Fig 3; Table 7; §4.4.1 rec 1"));
+    push("adv",R("3:NB","B-NR","Surgical embolectomy is not recommended over other advanced therapies in E2 patients not on mechanical circulatory support.","§4.4.4 rec 5"));
+  }
+  if(k==="D1"||k==="D2"){
+    push("adv",R("2b","C-LD","If advanced therapy is being considered: systemic thrombolysis (if acceptable bleeding risk), CDL or MT in appropriate cases may be considered to prevent deterioration. Surgical embolectomy may also be considered (2b C-LD)."+lysisQual,"Fig 3; Table 7"));
+  }
+  if(inR(k,"D1","E1")) push("adv",R("2b","B-NR","Compared with systemic thrombolysis, CDL, MT or surgical embolectomy have unclear efficacy, but may be chosen to reduce major bleeding or intracranial hemorrhage.","§4.4.2 rec 4; §4.4.3 rec 4; §4.4.4 rec 3"));
+  if(inR(k,"C2","D2")) push("adv",R("2b","B-R","When advanced therapy is chosen, CDL versus MT has no proven advantage for mortality or major bleeding.","§4.4 rec 2"));
+  if(k==="C3"){
+    push("adv",R("2b","C-LD","Benefit of systemic thrombolysis, CDL or MT added to anticoagulation is uncertain in C3. Consider with PERT if the patient deteriorates."+lysisQual,"Table 7; §4.4.1 rec 3"));
+  }
+  if(k==="C2") push("adv",R("2b","C-LD","Benefit of CDL or MT added to anticoagulation is uncertain in C2.","Table 7; §4.4.2 rec 3; §4.4.3 rec 3"));
+  if(yes("cit")&&inR(k,"C3","E2")) push("adv",R("2a","C-LD","<strong>Clot-in-transit:</strong> advanced therapy over anticoagulation alone is reasonable to reduce the risk of deterioration.","§4.4 rec 1"));
+  if(inR(k,"D1","E2")&&bleedOK) push("adv",R("2b","C-LD","With systemic thrombolysis, a lower-dose regimen may be considered to reduce bleeding (standard alteplase is 100 mg over 2 h).","§4.4.1 rec 4"));
+  if(inR(k,"C2","E1")) push("adv",R("3:NB","B-NR","For CDL, do not use a reduced alteplase dose <5 mg per PA over the standard 5–10 mg per PA.","§4.4.2 rec 5"));
+  if(inR(k,"A","C2")) push("adv",R("3:Harm",k==="C2"?"B-R":"A","<strong>No systemic thrombolysis.</strong> It raises major bleeding and ICH without benefit in this category.","Table 7; §4.4.1 rec 5"));
+  if(inR(k,"A","C1")) push("adv",R("3:NB","C-EO","CDL and mechanical thrombectomy are not recommended over anticoagulation alone.","Table 7"));
+  if(inR(k,"A","C3")) push("adv",R("3:NB","C-EO","Surgical embolectomy is not recommended over anticoagulation alone.","Table 7; §4.4.4 rec 4"));
+
+  /* IVC */
+  if(!acCI){
+    if(inR(k,"D1","E2")) push("ivc",R("2b","C-LD","With advanced interventions, the added benefit of an IVC filter is uncertain.","§4.3 rec 5"));
+    push("ivc",R("3:Harm","A","No routine IVC filter in a therapeutically anticoagulated patient.","§4.3 rec 7"));
+  }
+
+  /* agent selection: special populations */
+  const bmi=n("bmi"),wt=n("wt");
+  if(yes("preg")){push("agent",R("1","C-LD","Pregnancy: use <strong>LMWH or UFH</strong>.","§4.2.1 rec 12"));push("agent",R("3:Harm","C-LD","Pregnancy: DOACs and warfarin may cause miscarriage or fetal anomalies.","§4.2.1 rec 13"));}
+  if(yes("bf")) push("agent",R("1","C-EO","Breastfeeding: LMWH, UFH or warfarin over a DOAC.","§4.2.1 rec 14"));
+  if(v("aps")==="apsT") push("agent",R("1","A","Thrombotic antiphospholipid syndrome: <strong>VKA</strong> in preference to a DOAC.","§4.2.1 rec 7"));
+  if(v("aps")==="aps1") push("agent",R("2b","B-R","Single aCL or β2-GPI antibody: a DOAC might be a reasonable alternative to VKA.","§4.2.1 rec 8"));
+  if(bmi!=null&&bmi>30) push("agent",R("2a","B-NR",`BMI ${bmi}: a DOAC over VKA is reasonable for oral therapy.`,"§4.2.1 rec 5"));
+  if(bmi!=null&&bmi>40) push("agent",R("2b","B-NR","Class III obesity on LMWH: a reduced LMWH dose may be reasonable to lower bleeding (eg, enoxaparin 0.8 mg/kg BID studied).","§4.2.1 rec 6"));
+  if((bmi!=null&&bmi>40)||(wt!=null&&wt>150)) push("agent",R("2b","C-LD","Weight >150 kg or BMI >40 on LMWH: benefit of anti-Xa monitoring is not established.","§4.2.1 rec 24"));
+  if(yes("bari")) push("agent",R("2b","C-LD","Within 4 weeks of bariatric surgery, avoid DOACs because absorption may be reduced (supportive text).","§4.2.1 text"));
+  if(yes("brain")) push("agent",R("2b","C-LD","Brain tumor: a DOAC may be considered over LMWH to reduce ICH risk.","§4.2.1 rec 9"));
+  if(v("ckd")==="23") push("agent",R("1","A","CKD stage 2–3: a DOAC over VKA to reduce major bleeding.","§4.2.1 rec 10"));
+  if(v("ckd")==="45"){push("agent",R("2b","B-NR","CKD stage 4–5 or dialysis: unclear whether apixaban beats VKA for major bleeding.","§4.2.1 rec 11"));push("agent",R("2a","C-LD","CrCl <30 mL/min on LMWH: monitor anti-Xa levels to guide dose adjustment.","§4.2.1 rec 22"));}
+  if(v("liver")==="A") push("agent",R("2a","C-LD","Child-Pugh A: a DOAC instead of VKA is reasonable.","§4.2.1 rec 15"));
+  if(v("liver")==="B") push("agent",R("2b","C-LD","Child-Pugh B: a DOAC instead of VKA may be reasonable.","§4.2.1 rec 16"));
+  if(v("liver")==="C") push("agent",R("3:Harm","C-LD","Child-Pugh C: do not use a DOAC instead of VKA (bleeding risk).","§4.2.1 rec 17"));
+  if(yes("icu")) push("agent",R("2b","C-LD","ICU patients on LMWH: benefit of anti-Xa monitoring is not established.","§4.2.1 rec 25"));
+  if(yes("cancer")) push("agent",R("1","A","Active cancer: for treatment beyond the initial phase, a DOAC or LMWH over VKA.","§5.2 rec 5"));
+  push("agent",R("3:NB","A","Routine anti-Xa monitoring of weight-based LMWH is not indicated for most patients.","§4.2.1 rec 26"));
+
+  const sortF=(a,b)=>CORORDER[a.cor]-CORORDER[b.cor];
+  for(const g in G)G[g].sort(sortF);
+  return group("Anticoagulation",G.ac)+group("Risk assessment &amp; monitoring",G.risk)+group("Disposition &amp; team",G.dispo)+group("Hemodynamic &amp; respiratory support",G.support)+group("Reperfusion &amp; advanced therapy",G.adv)+group("IVC filter",G.ivc)+group("Agent selection for this patient",G.agent)+group("Avoid",G.no);
+}
+
+const T7=[["A–C1",["3:Harm","A"],["3:NB","C-EO"],["3:NB","C-EO"],["3:NB","C-EO"]],["C2",["3:Harm","B-R"],["2b","C-LD"],["2b","C-LD"],["3:NB","C-EO"]],["C3",["2b","C-LD"],["2b","C-LD"],["2b","C-LD"],["3:NB","C-EO"]],["D1–2",["2b","C-LD"],["2b","B-NR"],["2b","B-NR"],["2b","C-LD"]],["E1",["2a","C-LD"],["2a","C-LD"],["2a","B-NR"],["2a","B-NR"]],["E2",["2a","C-LD"],null,null,["3:NB","B-NR"]]];
+function t7row(k){if(inR(k,"A","C1"))return 0;return {C2:1,C3:2,D1:3,D2:3,E1:4,E2:5}[k];}
+function renderT7(k){
+  const cur=t7row(k); const cell=c=>c?`<span class="cor ${CORK[c[0]]}">${c[0]}</span> ${c[1]}`:"N/A";
+  $("#t7").innerHTML=`<tr><th>Category</th><th>Systemic lysis</th><th>CDL</th><th>Mechanical thrombectomy</th><th>Surgery</th></tr>`+T7.map((r,i)=>`<tr class="${i===cur?"cur":""}"><td>${r[0]}</td><td>${cell(r[1])}</td><td>${cell(r[2])}</td><td>${cell(r[3])}</td><td>${cell(r[4])}</td></tr>`).join("");
+}
+
+/* ---------- diagnosis pathway ---------- */
+function pathway(W){
+  const age=n("age"),dd=n("dd");
+  let ptp=v("ptp"); const autoP=ptp==="auto"; if(autoP)ptp=W.std==="Low"?"low":W.std==="Moderate"?"int":"high";
+  const P=perc(); const years=[yes("w_dvt"),yes("hemop"),yes("w_ml")].filter(Boolean).length;
+  const preg=yes("preg"); const onAC=yes("oncoag");
+  const steps=[]; let out,cls;
+  const lbl={low:"Low (<15%)",int:"Intermediate (15–50%)",high:"High (>50%)"}[ptp];
+  steps.push(["Clinical probability: "+lbl+(autoP?` (from Wells ${W.s})`:""),1]);
+  if(ptp==="high"){steps.push(["High probability: go straight to imaging (COR 1, A)",1]);out=["Perform diagnostic imaging","bad","CTPA preferred over V/Q (COR 1). If imaging is delayed in suspected C2 or higher with low bleeding risk, empiric therapeutic anticoagulation may be beneficial (COR 2a)."];}
+  else{
+    let goDD=true;
+    if(ptp==="low"){
+      if(P.neg){steps.push(["PERC: all 8 criteria met",1]);out=["Very low probability. No further testing","ok","PERC negative in a low-probability patient."];goDD=false;}
+      else steps.push([`PERC: ${P.fail} criteri${P.fail===1?"on":"a"} not met${P.unk?`, ${P.unk} unanswered`:""}. Continue to D-dimer`,1]);
+    }
+    if(goDD){
+      if(onAC){steps.push(["On therapeutic anticoagulation: D-dimer strategies not validated",1]);out=["Perform diagnostic imaging","bad","YEARS and age-adjusted D-dimer were studied only in patients not anticoagulated."];}
+      else if(preg&&v("cus")==="pos"){steps.push(["Pregnancy-adapted YEARS: compression US positive",1]);out=["Treat with anticoagulation","bad","A positive compression ultrasound in a pregnant patient with leg symptoms can be treated without CTPA. Use LMWH or UFH."];}
+      else{
+        const ageAdj=(!preg&&age!=null&&age>50)?age*10:500;
+        const thr=years===0?1000:Math.max(500,ageAdj);
+        steps.push([`YEARS items present: ${years} (DVT signs, hemoptysis, PE most likely)`,1]);
+        steps.push([`D-dimer threshold: ${thr} ng/mL`+(years>0&&ageAdj>500?` (age-adjusted, ${age} × 10)`:years===0?" (no YEARS items)":""),1]);
+        if(dd==null){steps.push(["Enter a D-dimer value",1]);out=["Perform D-dimer testing","warn","COR 2a: D-dimer with YEARS criteria for low or intermediate probability."];}
+        else if(dd<thr){steps.push([`D-dimer ${dd} < ${thr}`,1]);out=["PE diagnosis excluded","ok","No imaging needed. Failure rate below the 2% safety threshold in validation studies."];}
+        else{steps.push([`D-dimer ${dd} ≥ ${thr}`,1]);out=["Perform diagnostic imaging","bad","CTPA preferred over V/Q (COR 1, B-R). V/Q SPECT is reasonable over planar V/Q (COR 2a)."+(preg?" In pregnancy with a normal chest x-ray, low-dose CTPA is reasonable over perfusion scintigraphy (COR 2a).":"")];}
+      }
+    }
+  }
+  return {steps,out,ptp};
+}
+
+/* ---------- UI: score cards ---------- */
+function scoreCard(title,val,cls,pill,rows,extra){
+  return `<div class="card"><div class="score"><div><h3>${title}</h3></div><div class="val num">${val}</div><div class="cls">${pill}${cls?` ${cls}`:""}</div></div>${rows?`<details class="br"><summary>Points</summary><table class="pts">${rows}</table></details>`:""}${extra||""}</div>`;
+}
+const row=(l,p,on)=>`<tr class="${on?"on":"off"}"><td>${l}</td><td>${on?p:"0"}</td></tr>`;
+const pill=(t,c)=>`<span class="pill ${c}">${t}</span>`;
+
+/* ---------- main compute ---------- */
+function compute(){
+  document.querySelectorAll(".field").forEach(f=>{const el=f.querySelector("select,input"); const id=el.id; f.classList.toggle("set",el.value!==""&&el.value!==(DEFAULTS[id]||""));});
+  const W=wells(),Gv=geneva(),P=perc();
+  const S={pesi:pesi(),spesi:spesi(),bova:bova(),hestia:hestia(),cpes:cpes(),news:news2(),si:shockIdx()};
+  const C=category(S);
+
+  /* diagnosis tab */
+  $("#dxScores").innerHTML=
+    scoreCard("Wells (PE)",W.s,`Standard: ${W.std}. Modified: ${W.mod}.`,pill(W.std,W.std==="Low"?"ok":W.std==="High"?"bad":"warn"),W.it.map(x=>row(x[0],x[1],x[2])).join(""))+
+    scoreCard("Revised Geneva",Gv.r,`Simplified ${Gv.sm}: ${Gv.sc}, ${Gv.two}.`,pill(Gv.rc,Gv.rc==="Low"?"ok":Gv.rc==="High"?"bad":"warn"),Gv.it.map(x=>`<tr class="${x[3]?"on":"off"}"><td>${x[0]}</td><td>${x[3]?x[1]+" / "+x[2]:"0"}</td></tr>`).join(""),`<p class="note">Revised: low 0–3, intermediate 4–10, high ≥11. Simplified (points after the slash): low 0–1, intermediate 2–4, high ≥5.</p>`)+
+    scoreCard("PERC",P.neg?"Neg":P.unk?"?":"Pos",P.neg?"All criteria met":P.unk?`${P.unk} unanswered`:`${P.fail} not met`,pill(P.neg?"Rule-out":"Cannot rule out",P.neg?"ok":"warn"),P.it.map(x=>`<tr class="${x[1]?"on":"off"}"><td>${x[0]}</td><td>${x[1]===null?"?":x[1]?"✓":"✗"}</td></tr>`).join(""),`<p class="note">Apply only when gestalt probability is &lt;15% (eg, Wells &lt;2).</p>`);
+  const pw=pathway(W);
+  $("#dxRail").innerHTML=`<div class="card"><h2>Figure 1 pathway</h2><p class="outcome ${pw.out[1]}">${pw.out[0]}</p><p class="sub" style="margin-bottom:10px">${pw.out[2]}</p><ol class="path">${pw.steps.map((s,i)=>`<li class="on${i===pw.steps.length-1?" end "+pw.out[1]:""}">${s[0]}</li>`).join("")}</ol>
+    ${yes("preg")?`<p class="note">Pregnancy: use pregnancy-adapted YEARS (COR 2b). Age adjustment is not applied.</p>`:""}
+    <p class="note">Avoid in suspected PE: echocardiography to confirm or refute the diagnosis (3:NB); duplex US after negative CTPA or normal V/Q SPECT (3:NB); routine CT venography with CTPA (3:NB).</p></div>`;
+
+  /* severity tab */
+  const ps=S.pesi, sp=S.spesi, bo=S.bova, he=S.hestia, cp=S.cpes, nw=S.news, si=S.si;
+  $("#sevScores").innerHTML=
+    scoreCard("PESI",ps.s==null?"—":ps.s,ps.s==null?"Enter age":`Class ${ps.c}`,ps.s==null?pill("Incomplete","na"):pill(ps.el?"Elevated":"Low",ps.el?"bad":"ok"),ps.it.map((x,i)=>row(x[0],i===0?x[1]:"+"+x[1],x[2])).join(""),`<p class="note">Class I ≤65 · II 66–85 · III 86–105 · IV 106–125 · V ≥126</p>`)+
+    scoreCard("sPESI",sp.s,sp.el?"High risk of 30-day mortality":"Low risk of 30-day mortality",pill(sp.el?"≥1 Elevated":"0 Low",sp.el?"bad":"ok")+(sp.missing?" "+pill("vitals missing","na"):""),sp.it.map(x=>row(x[0],"+1",x[1])).join(""))+
+    scoreCard("Bova",bo.s,`Stage ${bo.st}`,pill(bo.st==="III"?"High":bo.st==="II"?"Intermediate":"Low",bo.st==="III"?"bad":bo.st==="II"?"warn":"ok")+(bo.missing?" "+pill("troponin/RV missing","na"):""),bo.it.map(x=>row(x[0],"+"+x[1],x[2])).join(""),`<p class="note">Stage I 0–2 · II 3–4 · III &gt;4</p>`)+
+    scoreCard("Hestia",he.pos,he.unk===11?"Not answered":he.el?"Positive: consider hospitalization":he.unk?`${he.unk} unanswered`:"Negative: consider outpatient care",pill(he.unk===11?"—":he.el?"Positive":"Negative",he.unk===11?"na":he.el?"bad":"ok"),null,`<p class="note">Answer below.</p>`)+
+    scoreCard("CPES",cp.s,cp.hi?"Higher risk for normotensive shock":"Lower risk for normotensive shock (0–5)",pill(cp.hi?"6 High":"0–5 Lower",cp.hi?"bad":"ok"),cp.it.map(x=>row(x[0],"+1",x[1])).join(""))+
+    scoreCard("Shock index",si==null?"—":si.toFixed(2),"Heart rate ÷ systolic BP",si==null?pill("Incomplete","na"):pill(si>=1?"≥1.0":"<1.0",si>=1?"warn":"ok"),null,`<p class="note">Continuous; no consensus cut-point for PE.</p>`)+
+    scoreCard("NEWS2",nw.s,nw.missing?`${nw.missing} parameter${nw.missing>1?"s":""} missing`:"Range 0–20",pill(nw.hi?"≥9 High risk":"<9",nw.hi?"bad":"ok"),nw.it.map(x=>`<tr class="${x[2]?"on":"off"}"><td>${x[0]}${x[1]!=null?` <span class="mono">(${x[1]})</span>`:""}</td><td>${x[2]==null?"?":x[2]}</td></tr>`).join(""),`<p class="note">In stable C–D patients, NEWS/NEWS2 may substitute for a PE-specific score (COR 2b).</p>`);
+
+  /* category tab */
+  const L=C.k[0]; const info=CATINFO[C.k];
+  $("#catCard").innerHTML=`<p class="sub" style="margin:0 0 8px">AHA/ACC Acute PE Clinical Category</p>
+    <div class="catbig"><span class="chip c-${L}">${C.full}</span><div><div class="t">${info[0]}</div><div class="d">${info[1]}${C.r?" + respiratory modifier":""}</div></div></div>
+    <div class="scale">${["A","B","C","D","E"].map(x=>`<div class="c-${x}${x===L?" cur":""}">${x}</div>`).join("")}</div>
+    <div class="scale-l"><span>Lowest risk</span><span>Highest risk</span></div>
+    <ul class="why">${C.why.map(w=>`<li>${w}</li>`).join("")}</ul>
+    ${C.notes.map(x=>`<p class="note ${x[0]}">${x[1]}</p>`).join("")}`;
+  $("#mgmtTitle").innerHTML=`Management for Category <span class="chip c-${L}">${C.full}</span>`;
+  $("#mgmt").innerHTML=management(C,S);
+  renderT7(C.k);
+
+  /* follow-up */
+  followup();
+
+  /* strip */
+  $("#strip").innerHTML=`<span><span class="chip c-${L}">${C.full}</span> ${info[0]}</span>
+   <span>Pathway <b style="font-family:var(--f-body)">${pw.out[0]}</b></span>
+   <span>PESI <b>${ps.s==null?"—":ps.s+" ("+ps.c+")"}</b></span><span>sPESI <b>${sp.s}</b></span><span>Bova <b>${bo.s}</b></span><span>Hestia <b>${he.unk===11?"—":he.el?"+":"−"}</b></span><span>NEWS2 <b>${nw.s}</b></span>`;
+}
+
+function followup(){
+  const rf=v("rf"),out=[],care=[];
+  const ext="(beyond the initial 3–6 months, with no planned stop date)";
+  if(rf==="major") out.push(R("1","B-NR","<strong>Stop anticoagulation after the initial 3–6 months.</strong> Recurrence risk is low with a major reversible risk factor.","§5.2 rec 2"));
+  if(rf==="minor") out.push(R("2a","B-NR","<strong>Shared decision</strong> about stopping at 3–6 months versus extended-phase therapy, weighing recurrence (≈4–7%/yr) against bleeding. A tool such as VTE-PREDICT can inform the conversation.","§5.2 rec 8"));
+  if(rf==="pers") out.push(R("1","C-LD","<strong>Continue into the extended phase</strong> "+ext+".","§5.2 rec 3"));
+  if(rf==="none") out.push(R("1","A","<strong>Continue into the extended phase</strong> "+ext+". Unprovoked PE carries a high recurrence risk after stopping.","§5.2 rec 1"));
+  if(rf==="cancer"){out.push(R("1","C-LD","<strong>Continue into the extended phase</strong> while cancer is active.","§5.2 rec 3"));out.push(R("1","A","For extended therapy with cancer, use a DOAC or LMWH over VKA.","§5.2 rec 5"));}
+  const extended=["pers","none","cancer"].includes(rf)||rf==="minor";
+  if(extended&&rf!==""){
+    if(yes("noac")) out.push(R("2a","B-R","Anticoagulation contraindicated or declined: low-dose aspirin over no therapy is reasonable.","§5.2 rec 9"));
+    else if(yes("doacci")&&rf!=="cancer") out.push(R("1","B-R","DOAC contraindicated: VKA over aspirin or no therapy.","§5.2 rec 6"));
+    else{
+      if(rf!=="cancer") out.push(R("1","A","Use a DOAC over VKA for extended therapy.","§5.2 rec 4"));
+      out.push(R("1","A","Consider half-dose apixaban (2.5 mg BID) or rivaroxaban (10 mg daily) in the extended phase to reduce bleeding.","§5.2 rec 7"));
+    }
+    out.push(R("1","B-NR","Reassess the risks and benefits of continued anticoagulation periodically.","§5.1.1 rec 4"));
+  }
+  if(rf==="") out.push(R("1","C-EO","Pick the risk factor present when the PE occurred to see duration guidance.",""));
+  const rc=v("recur");
+  if(rc){
+    out.push(R("1","C-EO","Confirm suspected recurrence with CTPA or V/Q scan.","§5.2.1 rec 1"));
+    out.push(R("1","C-LD","Evaluate clinical and pharmacologic causes of the recurrence (adherence, dosing, interactions, cancer, APS).","§5.2.1 rec 2"));
+    if(rc==="adh") out.push(R("2a","C-EO","Adherent at therapeutic intensity: switch to a different drug class (usually LMWH or fondaparinux).","§5.2.1 rec 3"));
+    if(rc==="red") out.push(R("2a","C-EO","On a reduced-dose DOAC: move to full dose within the same class.","§5.2.1 rec 4"));
+    if(rc==="lmwh") out.push(R("2a","B-NR","Cancer with recurrence on LMWH: escalate the LMWH dose by 20–25%.","§5.2.1 rec 5"));
+    if(rc==="sub") out.push(R("2a","C-EO","If anticoagulation was subtherapeutic or doses were missed, correcting this may be enough without changing drugs (supportive text).","§5.2.1 text"));
+    out.push(R("2b","C-LD","Recurrent PE despite optimal therapeutic anticoagulation: an IVC filter may be considered.","§4.3 rec 6"));
+  }
+  $("#fuOut").innerHTML=group("Anticoagulation duration &amp; agent",out.filter(r=>r.cor!=="3:NB"&&r.cor!=="3:Harm"));
+
+  care.push(R("1","C-LD","Follow-up within the first week after discharge: education, access barriers, adherence, bleeding check.","§5.1.1 rec 1"));
+  care.push(R("1","C-EO","Clinic visit at or before 3 months: decide duration, further testing, persistent symptoms.","§5.1.1 rec 2"));
+  care.push(R("1","C-LD","Ask about symptoms and functional limitation at every visit for at least 1 year to screen for CTEPD.","§5.1.1 rec 3"));
+  care.push(R("2a","B-NR","Screen for anxiety and depression with questionnaires.","§5.1.1 rec 5"));
+  care.push(R("2a","B-NR","Complex patients (labile anticoagulation, recurrence, unresolved symptoms, pregnancy-related PE) are reasonable to follow in a specialized PE clinic (Table 8).","§5.1.1 rec 6"));
+  if(yes("symp3")) care.push(R("2b","B-NR","Still symptomatic at 3–6 months: obtain a performance test (6-minute walk or shuttle walk) and evaluate for CTEPD.","§5.1.1 rec 7"));
+  if(v("rf")==="none") care.push(R("1","A","No identifiable risk factor: thorough history, examination and age-appropriate cancer screening.","§5.1.1 rec 8"));
+  if(v("rf")!=="major"&&yes("young")) care.push(R("2b","C-LD","Family history of thrombosis or age <55 without a major reversible factor: thrombophilia testing may be reasonable if results would change management.","§5.1.1 rec 9"));
+  if(yes("cbp")){care.push(R("1","C-EO","Counsel on contraception and anticoagulation options in case of pregnancy.","§5.1.1 rec 11"));care.push(R("2a","C-LD","Abnormal uterine bleeding on anticoagulation: manage medically or gynecologically, or switch strategy, before stopping anticoagulation.","§5.1.1 rec 13"));}
+  care.push(R("3:NB","A","No routine CT or PET-CT to look for occult cancer.","§5.1.1 rec 10"));
+  $("#fuCare").innerHTML=care.map(recHTML).join("");
+}
+
+/* ---------- routing ---------- */
+const VIEWS=["patient","diagnosis","severity","category","followup"];
+function route(){
+  let h=(location.hash||"").slice(1); if(!VIEWS.includes(h))h="patient";
+  VIEWS.forEach(x=>{document.getElementById("v-"+x).hidden=x!==h;});
+  document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.v===h)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
+}
+window.addEventListener("hashchange",()=>{route();window.scrollTo(0,0);});
+
+/* ---------- wire ---------- */
+document.addEventListener("input",e=>{if(e.target.matches("select,input"))compute();});
+document.addEventListener("change",e=>{if(e.target.matches("select,input"))compute();});
+syncPair("preg","h10");
+$("#btnExample").addEventListener("click",()=>{setAll(EXAMPLE);$("#exampleBanner").hidden=false;compute();});
+$("#btnClear").addEventListener("click",()=>{setAll({});$("#exampleBanner").hidden=true;compute();});
+setAll(EXAMPLE);
+route();compute();
+})();
+</script>
+
+</html>
