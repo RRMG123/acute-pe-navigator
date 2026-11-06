@@ -21,6 +21,10 @@ For patients with acute PE already confirmed on imaging.
    and special-population agent selection.
 4. **Duration & follow-up** – anticoagulation duration by VTE risk factor,
    recurrent PE management, follow-up care.
+5. **Summary** – the reperfusion decision (anticoagulation alone vs
+   mechanical thrombectomy or other advanced therapy) for the patient's
+   category, a treatment-options table with COR/LOE, missing data,
+   escalation triggers, and a copy-ready note for the chart or PERT.
 
 ## Use
 

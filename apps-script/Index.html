@@ -143,6 +143,21 @@ ol.path li.end{font-weight:700} ol.path li.end.ok{color:var(--ok)} ol.path li.en
 
 .checklist{columns:2 260px;column-gap:20px;font-size:.84rem;margin:6px 0 0;padding-left:18px}
 .checklist li{break-inside:avoid;margin:2px 0}
+.verdict{border-radius:10px;padding:16px 18px;border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.verdict.ok{background:var(--ok-bg)} .verdict.warn{background:var(--warn-bg)} .verdict.bad{background:var(--bad-bg)}
+.verdict .eyebrow{font:700 .7rem var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.verdict .head{font:800 1.5rem/1.15 var(--f-display);font-stretch:88%;text-wrap:balance}
+.verdict.ok .head{color:var(--ok)} .verdict.warn .head{color:var(--warn)} .verdict.bad .head{color:var(--bad)}
+.verdict p{margin:0;font-size:.9rem;max-width:80ch}
+table.opt{border-collapse:collapse;width:100%;min-width:520px;font-size:.86rem}
+table.opt th,table.opt td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.opt th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+table.opt td:first-child{font-weight:700;white-space:nowrap}
+table.opt tr.focus td{background:var(--surface-2)}
+table.opt .cor{width:auto;padding:2px 6px;display:inline-block}
+ul.flags{margin:6px 0 0;padding-left:18px;font-size:.86rem} ul.flags li{margin:3px 0}
+textarea.notebox{width:100%;min-height:220px;font:500 .8rem/1.5 var(--f-mono);color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:10px;resize:vertical}
+.next{display:flex;justify-content:flex-end}
 footer{color:var(--muted);font-size:.78rem;border-top:1px solid var(--line);padding-block:18px 30px}
 footer p{max-width:90ch;margin:4px 0}
 @media (prefers-reduced-motion:no-preference){.chip,.scale div{transition:opacity .2s,background .2s}}
@@ -167,6 +182,7 @@ footer p{max-width:90ch;margin:4px 0}
     <a href="#severity" data-v="severity"><span class="step">2</span>Severity scores</a>
     <a href="#category" data-v="category"><span class="step">3</span>Category &amp; management</a>
     <a href="#followup" data-v="followup"><span class="step">4</span>Duration &amp; follow-up</a>
+    <a href="#summary" data-v="summary"><span class="step">5</span>Summary</a>
   </nav>
   <div class="strip" id="strip" aria-live="polite"></div>
 </div></div>
@@ -191,6 +207,7 @@ footer p{max-width:90ch;margin:4px 0}
         <div class="card"><h2>Hestia criteria</h2><p class="sub">Any “Yes” makes Hestia positive: consider hospitalization. All “No”: consider outpatient treatment.</p><div class="fields" id="f-hestia"></div></div>
         <div class="card"><h2>Treatment modifiers</h2><p class="sub">Adjust agent choice and advanced-therapy options.</p><div class="fields" id="f-mod"></div></div>
         <div class="card"><h2>Duration &amp; follow-up</h2><p class="sub">For the discharge plan or the 3-month visit. VTE risk factor categories are listed on the Duration &amp; follow-up tab (Table 9).</p><div class="fields" id="f-fu"></div></div>
+        <div class="next"><a class="btn primary" href="#summary" data-go="summary" style="text-decoration:none">View summary: thrombectomy vs anticoagulation →</a></div>
       </div>
       <div class="rail">
         <div class="card" id="catCard"></div>
@@ -237,6 +254,12 @@ footer p{max-width:90ch;margin:4px 0}
       </div>
     </div>
     <div class="card" style="margin-top:16px"><h2>Follow-up care</h2><div class="recs" id="fuCare"></div></div>
+  </section>
+
+  <!-- 5 SUMMARY -->
+  <section class="view" id="v-summary" hidden>
+    <p class="intro">The reperfusion decision for this patient: is anticoagulation alone enough, or should mechanical thrombectomy or another advanced therapy be considered? Based on the AHA/ACC category, Table 7 and the Section 4.4 recommendations. Discuss every patient in Category C or above with your PERT.</p>
+    <div id="sumOut" style="display:flex;flex-direction:column;gap:16px"></div>
   </section>
 </main>
 
@@ -648,12 +671,13 @@ function compute(){
 
   /* follow-up */
   followup();
+  $("#sumOut").innerHTML=summary(C,S);
 
-  window.__last={category:C.full,categoryName:info[0],pesi:ps.s,pesiClass:ps.c||"",spesi:sp.s,bova:bo.s,hestia:he.unk===11?"":(he.el?"Positive":"Negative"),cpes:cp.s,news2:nw.s,shockIndex:si==null?"":+si.toFixed(2),
+  window.__last={category:C.full,categoryName:info[0],decision:window.__decision||"",pesi:ps.s,pesiClass:ps.c||"",spesi:sp.s,bova:bo.s,hestia:he.unk===11?"":(he.el?"Positive":"Negative"),cpes:cp.s,news2:nw.s,shockIndex:si==null?"":+si.toFixed(2),
     age:n("age"),sex:v("sex"),hr:n("hr"),sbp:n("sbp"),rr:n("rr"),spo2:n("spo2"),troponin:v("tnt"),bnp:v("bnp"),lactate:n("lac"),rv:v("rv"),riskFactor:v("rf")};
   /* strip */
   $("#strip").innerHTML=`<span><span class="chip c-${L}">${C.full}</span> ${info[0]}</span>
-   <span>PESI <b>${ps.s==null?"—":ps.s+" ("+ps.c+")"}</b></span><span>sPESI <b>${sp.s}</b></span><span>Bova <b>${bo.s}</b></span><span>Hestia <b>${he.unk===11?"—":he.el?"+":"−"}</b></span><span>NEWS2 <b>${nw.s}</b></span>`;
+   <span>Decision <b style="font-family:var(--f-body)">${window.__decision||""}</b></span><span>PESI <b>${ps.s==null?"—":ps.s+" ("+ps.c+")"}</b></span><span>sPESI <b>${sp.s}</b></span><span>Bova <b>${bo.s}</b></span><span>Hestia <b>${he.unk===11?"—":he.el?"+":"−"}</b></span><span>NEWS2 <b>${nw.s}</b></span>`;
 }
 
 function followup(){
@@ -700,8 +724,86 @@ function followup(){
   $("#fuCare").innerHTML=care.map(recHTML).join("");
 }
 
+/* ---------- summary ---------- */
+const VERB={"1":"Recommended","2a":"Reasonable","2b":"May be considered / uncertain","3:NB":"Not recommended (no benefit)","3:Harm":"Harmful: avoid"};
+function corCell(c){return c?`<span class="cor ${CORK[c[0]]}">${c[0]}</span> <span class="loe">${c[1]}</span>`:"N/A";}
+function summary(C,S){
+  const k=C.k, L=k[0], row=T7[t7row(k)], bleedOK=v("bleed")==="ok", acCI=yes("acci"), cit=yes("cit");
+  let V;
+  if(inR(k,"A","C1")) V={c:"ok",h:"Anticoagulation alone",p:"Thrombectomy, catheter-directed lysis and surgery are not recommended over anticoagulation (3: No benefit, C-EO), and systemic thrombolysis is harmful (3: Harm). This patient is not a thrombectomy candidate."};
+  else if(k==="C2") V={c:"ok",h:"Anticoagulation alone",p:"The benefit of thrombectomy or CDL added to anticoagulation is uncertain in C2 (2b, C-LD), and systemic thrombolysis is harmful (3: Harm, B-R). Treat with anticoagulation and monitor; reassess if the patient worsens."};
+  else if(k==="C3"&&!cit) V={c:"warn",h:"Anticoagulation, close monitoring; thrombectomy only if selected by PERT",p:"In C3, the benefit of thrombectomy, CDL or systemic lysis over anticoagulation alone is uncertain (2b, C-LD). Start LMWH, admit to a monitored bed, and escalate to advanced therapy if the patient deteriorates. A MAP <80 mm Hg may flag patients who need escalation (2a)."};
+  else if(k==="C3"&&cit) V={c:"bad",h:"Consider thrombectomy or other advanced therapy (clot-in-transit)",p:"With a free-floating right-heart thrombus in C3–E2, advanced therapy over anticoagulation alone is reasonable to reduce the risk of deterioration (2a, C-LD)."};
+  else if(k==="D1"||k==="D2") V={c:"bad",h:"Consider mechanical thrombectomy or other advanced therapy",p:"Incipient cardiopulmonary failure. Thrombectomy plus anticoagulation may be considered over anticoagulation alone to prevent deterioration (2b, B-NR); CDL (2b, B-NR), systemic lysis if bleeding risk is acceptable (2b, C-LD) and surgical embolectomy (2b, C-LD) are alternatives. Decide with PERT now."};
+  else if(k==="E1") V={c:"bad",h:"Advanced therapy indicated: thrombectomy is reasonable",p:"Cardiopulmonary failure. Mechanical thrombectomy plus anticoagulation is reasonable over anticoagulation alone (2a, B-NR), as are systemic thrombolysis if bleeding risk is acceptable (2a, C-LD), CDL (2a, C-LD) and surgical embolectomy (2a, B-NR). Do not transfer before stabilizing (3: Harm)."};
+  else V={c:"bad",h:"Stabilize: VA-ECMO and/or systemic thrombolysis",p:"Refractory shock or cardiac arrest. VA-ECMO (2a, B-NR) and systemic thrombolysis if bleeding risk is acceptable (2a, C-LD) are the listed options. Catheter-based thrombectomy and CDL are not applicable in E2 (Table 7), and surgery is not recommended over other advanced therapies without mechanical support (3: No benefit)."};
+  const mods=[];
+  if(!bleedOK&&inR(k,"C3","E2")) mods.push("High bleeding risk: systemic thrombolysis requires acceptable bleeding risk. Thrombectomy (no lytic) or surgery may be chosen over lysis to reduce major bleeding and ICH (2b, B-NR).");
+  else if(inR(k,"D1","E1")) mods.push("Compared with systemic thrombolysis, thrombectomy's efficacy is unclear, but it may be chosen to reduce major bleeding (2b, B-NR).");
+  if(inR(k,"C2","D2")) mods.push("Thrombectomy versus CDL: no proven difference in mortality or major bleeding (2b, B-R). Operator experience, clot location and urgency guide the choice.");
+  if(acCI) mods.push("Anticoagulation is contraindicated: a retrievable IVC filter is recommended (1, B-R). Lytic-based options also carry bleeding risk; discuss non-lytic thrombectomy with PERT.");
+  if(cit&&k!=="C3"&&inR(k,"D1","E2")) mods.push("Clot-in-transit adds support for advanced therapy (2a, C-LD).");
+  if(cit&&inR(k,"A","C2")) mods.push("Clot-in-transit is present. The guideline's clot-in-transit recommendation covers C3–E2; with this category, discuss with PERT.");
+  // options table
+  const acRow=acCI?[["1","B-R"],"Contraindicated: retrievable IVC filter"]:[["1","B-R"],k==="E2"?"LMWH or UFH":inR(k,"C1","E1")?"LMWH first (preferred over UFH)":"DOAC"];
+  const ecmo=k==="E2"?["2a","B-NR"]:null;
+  const opts=[
+    ["Anticoagulation",acRow[0],acRow[1]],
+    ["Mechanical thrombectomy",row[3],row[3]?VERB[row[3][0]]:"Not applicable in E2"],
+    ["Catheter-directed lysis",row[2],row[2]?VERB[row[2][0]]:"Not applicable in E2"],
+    ["Systemic thrombolysis",row[1],VERB[row[1][0]]+(bleedOK?"":" · bleeding risk high")],
+    ["Surgical embolectomy",row[4],VERB[row[4][0]]],
+    ["VA-ECMO",ecmo,ecmo?VERB["2a"]:"Only for refractory shock (E2)"]];
+  // missing data
+  const miss=[];
+  if(v("rv")==="") miss.push("RV size/function not assessed (needed to separate C1/C2/C3).");
+  if(v("tnt")===""&&v("bnp")==="") miss.push("No cardiac biomarker (troponin or BNP) entered.");
+  if(n("lac")==null&&inR(k,"C1","E2")) miss.push("Lactate not entered (normotensive shock would move the patient to D2).");
+  if(n("sbp")==null||n("hr")==null) miss.push("Heart rate or systolic BP missing.");
+  if(C.sev.el==null) miss.push("Severity score incomplete.");
+  if(v("ext")==="") miss.push("Most proximal clot location not entered.");
+  // triggers
+  const trig=[];
+  if(inR(k,"A","C3")){trig.push("Any hypotension (SBP <90 or drop >40 mm Hg) → D1 or higher");trig.push("Lactate >2, rising creatinine, low urine output or new confusion → D2 (normotensive shock)");}
+  if(k==="C3") trig.push("MAP <80 mm Hg → consider escalation (2a)");
+  if(inR(k,"C1","D2")) trig.push("Rising oxygen needs (>6 L or nonrebreather; NIV/intubation) → respiratory modifier, reassess");
+  if(inR(k,"D1","D2")) trig.push("Persistent hypotension with cardiogenic shock → E1 (advanced therapy reasonable, 2a)");
+  if(k==="E1") trig.push("Refractory shock or arrest → E2 (VA-ECMO, systemic lysis)");
+  trig.push("Highest-risk window is the first 24–72 hours: reassess and re-run this calculator when anything changes");
+  // copyable note
+  const ps=S.pesi,sp=S.spesi,bo=S.bova,he=S.hestia;
+  const age=n("age"),sex=v("sex");
+  const yn=(id,t)=>v(id)==="e"?t+" elevated":v(id)==="n"?t+" normal":t+" not measured";
+  const bpTxt={norm:"no hypotension",trans:"transient hypotension",pers:"persistent hypotension with cardiogenic shock",refr:"refractory shock / cardiac arrest"}[v("bp")];
+  const note=[
+    `ACUTE PE SUMMARY (2026 AHA/ACC guideline)`,
+    `Patient: ${age!=null?age+" y":"age ?"}${sex?" "+(sex==="m"?"M":"F"):""}. Clot: ${v("ext")==="sub"?"subsegmental only":v("ext")==="seg"?"segmental or more proximal":"location not entered"}${yes("saddle")?", saddle":""}${yes("dvt")?", concomitant DVT":""}${cit?", CLOT-IN-TRANSIT":""}.`,
+    `Vitals: HR ${n("hr")??"?"}, SBP ${n("sbp")??"?"}, RR ${n("rr")??"?"}, SpO2 ${n("spo2")??"?"}% ${v("o2")==="supp"?"on O2":"on room air"}, ${bpTxt}.`,
+    `RV: ${v("rv")==="a"?"abnormal":v("rv")==="n"?"normal":"not assessed"}. ${yn("tnt","Troponin")}; ${yn("bnp","BNP")}. Lactate ${n("lac")??"not measured"}.`,
+    `Scores: PESI ${ps.s??"?"}${ps.c?" (class "+ps.c+")":""}, sPESI ${sp.s}, Bova ${bo.s} (stage ${bo.st}), Hestia ${he.unk===11?"not done":he.el?"positive":"negative"}, NEWS2 ${S.news.s}${S.si!=null?", shock index "+S.si.toFixed(2):""}.`,
+    `AHA/ACC Category: ${C.full} (${CATINFO[k][0]}; ${CATINFO[k][1]}${C.r?"; respiratory modifier":""}).`,
+    `Decision: ${V.h}.`,
+    `Options for ${C.full}: thrombectomy ${row[3]?row[3].join(" "):"N/A"}; CDL ${row[2]?row[2].join(" "):"N/A"}; systemic lysis ${row[1].join(" ")}; surgery ${row[4].join(" ")}${ecmo?"; VA-ECMO 2a B-NR":""}.`,
+    `Anticoagulation: ${acRow[1]}.${inR(k,"C1","E2")?" PERT consult recommended (COR 1).":""}`,
+    `Bleeding risk for lysis: ${bleedOK?"acceptable":"HIGH"}.`,
+    miss.length?`Missing: ${miss.join(" ")}`:"",
+    `Decision support only; final decision by treating team/PERT.`].filter(Boolean).join("\n");
+  window.__decision=V.h;
+  return `<div class="verdict ${V.c}"><span class="eyebrow">Reperfusion decision · Category <span class="chip c-${L}">${C.full}</span></span><div class="head">${V.h}</div><p>${V.p}</p></div>
+  ${mods.length?`<div class="card"><h2>What modifies the choice</h2><ul class="flags">${mods.map(m=>`<li>${m}</li>`).join("")}</ul></div>`:""}
+  <div class="card"><h2>Treatment options for ${C.full}</h2><p class="sub">Table 7 class of recommendation (COR) and level of evidence for this category, versus anticoagulation alone.</p>
+    <div class="tbl-wrap"><table class="opt"><tr><th>Option</th><th>COR / LOE</th><th>Meaning for this patient</th></tr>
+    ${opts.map(o=>`<tr class="${o[0]==="Mechanical thrombectomy"?"focus":""}"><td>${o[0]}</td><td>${corCell(o[1])}</td><td>${o[2]}</td></tr>`).join("")}</table></div></div>
+  <div class="grid even">
+    <div class="card"><h2>Data still missing</h2>${miss.length?`<ul class="flags">${miss.map(m=>`<li>${m}</li>`).join("")}</ul><p class="note warn">Missing data can underestimate the category and change the decision.</p>`:`<p class="sub" style="margin:6px 0 0">All inputs that drive the category are entered.</p>`}</div>
+    <div class="card"><h2>Reassess and escalate if</h2><ul class="flags">${trig.map(m=>`<li>${m}</li>`).join("")}</ul></div>
+  </div>
+  <div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline"><h2>Note for the chart or PERT</h2><span><button class="btn" id="btnCopy" type="button">Copy note</button> <span id="copyMsg" class="loe" aria-live="polite"></span></span></div>
+    <p class="sub">Plain text. Contains no names or identifiers.</p><textarea class="notebox" id="noteBox" readonly>${esc(note)}</textarea></div>`;
+}
+
 /* ---------- routing ---------- */
-const VIEWS=["patient","severity","category","followup"];
+const VIEWS=["patient","severity","category","followup","summary"];
 function route(){
   let h=(location.hash||"").slice(1); if(!VIEWS.includes(h))h="patient";
   VIEWS.forEach(x=>{document.getElementById("v-"+x).hidden=x!==h;});
@@ -716,6 +818,9 @@ document.addEventListener("click",e=>{const a=e.target.closest("nav.tabs a,a[dat
 document.addEventListener("input",e=>{if(e.target.matches("select,input"))compute();});
 document.addEventListener("change",e=>{if(e.target.matches("select,input"))compute();});
 syncPair("preg","h10");
+document.addEventListener("click",e=>{if(e.target.id!=="btnCopy")return;const t=$("#noteBox");
+  const done=m=>{$("#copyMsg").textContent=m;};
+  try{navigator.clipboard.writeText(t.value).then(()=>done("Copied"),()=>{t.select();done("Selected: press Ctrl/Cmd+C");});}catch(_){t.select();done("Selected: press Ctrl/Cmd+C");}});
 $("#btnExample").addEventListener("click",()=>{setAll(EXAMPLE);$("#exampleBanner").hidden=false;compute();});
 $("#btnClear").addEventListener("click",()=>{setAll({});$("#exampleBanner").hidden=true;compute();});
 setAll(EXAMPLE);
