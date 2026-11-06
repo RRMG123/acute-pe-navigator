@@ -29,3 +29,11 @@ Clinical decision support for trained clinicians. It does not replace clinical
 judgment, multidisciplinary PERT input, or local protocols. Verify drug dosing
 against product labeling. Not affiliated with or endorsed by the guideline's
 authors or societies.
+
+## Google Sheets version
+
+`apps-script/` contains a Google Apps Script build. In a Google Sheet, open
+Extensions → Apps Script, replace `Code.gs` with `apps-script/Code.gs`, add an
+HTML file named `Index` with the contents of `apps-script/Index.html`, save,
+and reload the sheet. A **PE Navigator** menu opens the calculator, and
+**Save case to sheet** logs scores (no identifiers) to a "PE Cases" tab.
