@@ -38,8 +38,8 @@ function saveCase(d) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   if (!ss) throw new Error('Saving works only when the calculator is opened from the spreadsheet menu.');
   var sh = ss.getSheetByName('PE Cases') || ss.insertSheet('PE Cases');
-  var cols = ['timestamp','category','categoryName','pathway','wells','geneva','pesi','pesiClass','spesi','bova','hestia',
-              'cpes','news2','shockIndex','age','sex','hr','sbp','rr','spo2','troponin','bnp','lactate','ddimer','rv'];
+  var cols = ['timestamp','category','categoryName','pesi','pesiClass','spesi','bova','hestia',
+              'cpes','news2','shockIndex','age','sex','hr','sbp','rr','spo2','troponin','bnp','lactate','rv','riskFactor'];
   if (sh.getLastRow() === 0) {
     sh.appendRow(cols);
     sh.getRange(1, 1, 1, cols.length).setFontWeight('bold');

@@ -7,15 +7,19 @@ and Management of Acute Pulmonary Embolism in Adults (Creager et al.,
 
 ## What it does
 
-1. **Patient data** – enter vitals, history, labs and imaging once.
-2. **Suspected PE** – Wells, revised/simplified Geneva, PERC, and the Figure 1
-   pathway (YEARS + age-adjusted D-dimer, pregnancy-adapted YEARS).
-3. **Severity scores** – PESI, sPESI, Bova, Hestia, CPES, shock index, NEWS2.
-4. **Category & management** – AHA/ACC Acute PE Clinical Category (A–E,
+For patients with acute PE already confirmed on imaging.
+
+1. **Questions** – every input on one tab: vitals, history, labs, CTPA/echo
+   findings, presentation, hemodynamics, respiratory status, Hestia,
+   treatment modifiers and follow-up details. The category and scores update
+   live in the side panel.
+2. **Severity scores** – PESI, sPESI, Bova, Hestia, CPES, shock index, NEWS2,
+   each with a points breakdown.
+3. **Category & management** – AHA/ACC Acute PE Clinical Category (A–E,
    subcategories, respiratory modifier R) with category-matched
    recommendations (COR/LOE), Table 7 advanced-therapy options, IVC filter
    and special-population agent selection.
-5. **Duration & follow-up** – anticoagulation duration by VTE risk factor,
+4. **Duration & follow-up** – anticoagulation duration by VTE risk factor,
    recurrent PE management, follow-up care.
 
 ## Use
