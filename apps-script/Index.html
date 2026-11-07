@@ -188,7 +188,7 @@ footer p{max-width:90ch;margin:4px 0}
 </div></div>
 
 <div class="wrap">
-  <div class="example" id="exampleBanner"><strong>Example patient loaded.</strong> These values are illustrative, not a real patient. Replace them with your own, or press Clear all.</div>
+  <div class="example" id="exampleBanner" hidden><strong>Example patient loaded.</strong> These values are illustrative, not a real patient. Replace them with your own, or press Clear all.</div>
 </div>
 
 <main class="wrap">
@@ -673,6 +673,19 @@ function compute(){
   followup();
   $("#sumOut").innerHTML=summary(C,S);
 
+  /* empty state: nothing entered yet */
+  const blank=["age","hr","sbp","rr","spo2","lac"].every(id=>n(id)==null)&&["tnt","bnp","rv","ext"].every(id=>v(id)==="")&&v("bp")==="norm";
+  if(blank){
+    window.__decision="";
+    const emptyCat=`<p class="sub" style="margin:0 0 8px">AHA/ACC Acute PE Clinical Category</p><h2>No patient data yet</h2><p class="sub" style="margin:6px 0 0">Start with age and vital signs, then labs and CTPA/echo findings. The category, scores and decision appear here as you fill in the Questions tab. Press <strong>Load example patient</strong> to see a worked example.</p>`;
+    $("#catCard").innerHTML=emptyCat; $("#catCard2").innerHTML=emptyCat;
+    $("#qScores").innerHTML=`<h3>Scores</h3><p class="sub" style="margin:6px 0 0">Calculated once age and vital signs are entered.</p>`;
+    $("#mgmtTitle").textContent="Management"; $("#mgmt").innerHTML=`<p class="sub">Enter patient data on the Questions tab to see recommendations for this patient's category.</p>`;
+    $("#sumOut").innerHTML=`<div class="verdict"><span class="eyebrow">Reperfusion decision</span><div class="head">No patient data yet</div><p>Fill in the Questions tab. The decision between anticoagulation alone and thrombectomy or other advanced therapy appears here once the category can be assigned.</p></div>`;
+    renderT7("Z");
+    $("#strip").innerHTML=`<span>No patient data yet. Start on the Questions tab.</span>`;
+    return;
+  }
   window.__last={category:C.full,categoryName:info[0],decision:window.__decision||"",pesi:ps.s,pesiClass:ps.c||"",spesi:sp.s,bova:bo.s,hestia:he.unk===11?"":(he.el?"Positive":"Negative"),cpes:cp.s,news2:nw.s,shockIndex:si==null?"":+si.toFixed(2),
     age:n("age"),sex:v("sex"),hr:n("hr"),sbp:n("sbp"),rr:n("rr"),spo2:n("spo2"),troponin:v("tnt"),bnp:v("bnp"),lactate:n("lac"),rv:v("rv"),riskFactor:v("rf")};
   /* strip */
@@ -823,7 +836,7 @@ document.addEventListener("click",e=>{if(e.target.id!=="btnCopy")return;const t=
   try{navigator.clipboard.writeText(t.value).then(()=>done("Copied"),()=>{t.select();done("Selected: press Ctrl/Cmd+C");});}catch(_){t.select();done("Selected: press Ctrl/Cmd+C");}});
 $("#btnExample").addEventListener("click",()=>{setAll(EXAMPLE);$("#exampleBanner").hidden=false;compute();});
 $("#btnClear").addEventListener("click",()=>{setAll({});$("#exampleBanner").hidden=true;compute();});
-setAll(EXAMPLE);
+setAll({});
 show("patient");compute();
 if(window.google&&google.script&&google.script.run){const b=$("#btnSave");b.hidden=false;
   b.addEventListener("click",()=>{$("#saveMsg").textContent="Saving…";
