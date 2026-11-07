@@ -1,5 +1,6 @@
 /**
  * Acute PE Navigator — Google Sheets add-on script
+ * Copyright (c) 2026 Riverside Radiology Medical Group. All rights reserved.
  * Based on the 2026 AHA/ACC/ACCP/ACEP/CHEST/SCAI/SHM/SIR/SVM/SVN acute PE guideline
  * (Creager et al., Circulation 2026;153:e977–e1051).
  * Clinical decision support only; does not replace clinical judgment.
@@ -16,12 +17,12 @@ function onOpen() {
 
 function page_() {
   return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('Acute PE Navigator')
+    .setTitle('Acute PE Navigator · Riverside Radiology Medical Group')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 function openDialog() {
-  SpreadsheetApp.getUi().showModelessDialog(page_().setWidth(1200).setHeight(820), 'Acute PE Navigator');
+  SpreadsheetApp.getUi().showModelessDialog(page_().setWidth(1200).setHeight(820), 'Acute PE Navigator · Riverside Radiology Medical Group');
 }
 
 function openSidebar() {

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head><base target="_top"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
-<title>Acute PE Navigator</title>
+<title>Acute PE Navigator | Riverside Radiology Medical Group</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -156,15 +156,23 @@ table.opt .cor{width:auto;padding:2px 6px;display:inline-block}
 ul.flags{margin:6px 0 0;padding-left:18px;font-size:.86rem} ul.flags li{margin:3px 0}
 textarea.notebox{width:100%;min-height:220px;font:500 .8rem/1.5 var(--f-mono);color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:10px;resize:vertical}
 .next{display:flex;justify-content:flex-end}
+.brand{display:flex;gap:14px;align-items:center}
+.brand img{height:48px;width:auto;max-width:180px;object-fit:contain}
+.brand .org{font:700 .74rem var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.owner{color:var(--ink);font-weight:600}
 footer{color:var(--muted);font-size:.78rem;border-top:1px solid var(--line);padding-block:18px 30px}
 footer p{max-width:90ch;margin:4px 0}
 @media (prefers-reduced-motion:no-preference){.chip,.scale div{transition:opacity .2s,background .2s}}
 </style>
 
 <header class="top"><div class="wrap">
-  <div>
+  <div class="brand">
+    <img src=+logo+ alt="Riverside Radiology Medical Group logo" onerror="this.remove()">
+    <div>
+    <div class="org">Riverside Radiology Medical Group</div>
     <h1>Acute PE Navigator</h1>
     <p>For confirmed acute PE: severity scores, AHA/ACC Clinical Category (A–E, with R modifier) and category-matched management, built from the 2026 AHA/ACC/ACCP/ACEP/CHEST/SCAI/SHM/SIR/SVM/SVN acute PE guideline.</p>
+    </div>
   </div>
   <div class="hdr-actions">
     <button class="btn" id="btnClear" type="button">Clear all</button>
@@ -258,6 +266,7 @@ footer p{max-width:90ch;margin:4px 0}
 </main>
 
 <footer class="wrap">
+  <p class="owner">© 2026 Riverside Radiology Medical Group. All rights reserved. Acute PE Navigator is the property of Riverside Radiology Medical Group.</p>
   <p><strong>Source:</strong> Creager MA, Barnes GD, Giri J, et al. 2026 AHA/ACC/ACCP/ACEP/CHEST/SCAI/SHM/SIR/SVM/SVN guideline for the evaluation and management of acute pulmonary embolism in adults. <em>Circulation</em>. 2026;153:e977–e1051. doi:10.1161/CIR.0000000000001415. Figures 1–3, Tables 3–9 and the section recommendations.</p>
   <p>Clinical decision support for trained clinicians. It does not replace clinical judgment, multidisciplinary PERT input, or local protocols. Check drug dosing against the product label. Not affiliated with or endorsed by the guideline's authors or societies.</p>
 </footer>

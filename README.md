@@ -1,5 +1,7 @@
 # Acute PE Navigator
 
+**Property of Riverside Radiology Medical Group.** © 2026 Riverside Radiology Medical Group. All rights reserved.
+
 A single-page clinical calculator for acute pulmonary embolism, built from the
 2026 AHA/ACC/ACCP/ACEP/CHEST/SCAI/SHM/SIR/SVM/SVN Guideline for the Evaluation
 and Management of Acute Pulmonary Embolism in Adults (Creager et al.,
@@ -26,11 +28,25 @@ For patients with acute PE already confirmed on imaging.
    category, a treatment-options table with COR/LOE, missing data,
    escalation triggers, and a copy-ready note for the chart or PERT.
 
+## Logo
+
+Add the group logo as `logo.png` in the repository root. The header shows it
+automatically on the website and in the Google Sheets version; until then the
+header shows the group name only.
+
 ## Use
 
 The page opens blank. **Clear all** resets it for the next patient.
 Open `index.html` in any browser, or enable GitHub Pages
 (Settings → Pages → Deploy from branch → `main` / root).
+
+## Ownership and license
+
+This software is the property of Riverside Radiology Medical Group and is provided for use by its
+clinicians. No license is granted to copy, modify or redistribute it without
+written permission (see `LICENSE`). Guideline content is summarized from and
+credited to the 2026 AHA/ACC acute PE guideline, which remains the property
+of its publishers.
 
 ## Disclaimer
 
