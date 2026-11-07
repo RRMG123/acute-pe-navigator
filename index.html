@@ -157,7 +157,13 @@ ul.flags{margin:6px 0 0;padding-left:18px;font-size:.86rem} ul.flags li{margin:3
 textarea.notebox{width:100%;min-height:220px;font:500 .8rem/1.5 var(--f-mono);color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:10px;resize:vertical}
 .next{display:flex;justify-content:flex-end}
 .brand{display:flex;gap:14px;align-items:center}
-.brand img{height:48px;width:auto;max-width:180px;object-fit:contain}
+.brand{--plate:transparent}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .brand{--plate:#f4f7f9}}
+:root[data-theme="dark"] .brand{--plate:#f4f7f9}
+.brand img{height:64px;width:auto;max-width:min(200px,40vw);object-fit:contain;background:var(--plate);border-radius:8px;padding:4px 6px}
+.brand.has-logo .org{display:none}
+.brand>div{min-width:0}
+@media (max-width:600px){.brand{flex-direction:column;align-items:flex-start;gap:10px}.brand img{height:52px}}
 .brand .org{font:700 .74rem var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
 .owner{color:var(--ink);font-weight:600}
 footer{color:var(--muted);font-size:.78rem;border-top:1px solid var(--line);padding-block:18px 30px}
@@ -167,7 +173,7 @@ footer p{max-width:90ch;margin:4px 0}
 
 <header class="top"><div class="wrap">
   <div class="brand">
-    <img src=+logo+ alt="Riverside Radiology Medical Group logo" onerror="this.remove()">
+    <img src="logo.png" alt="Riverside Radiology Medical Group logo" onload="this.parentNode.classList.add('has-logo')" onerror="this.remove()">
     <div>
     <div class="org">Riverside Radiology Medical Group</div>
     <h1>Acute PE Navigator</h1>

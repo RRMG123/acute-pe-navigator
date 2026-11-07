@@ -30,9 +30,8 @@ For patients with acute PE already confirmed on imaging.
 
 ## Logo
 
-Add the group logo as `logo.png` in the repository root. The header shows it
-automatically on the website and in the Google Sheets version; until then the
-header shows the group name only.
+`logo.png` is the group logo, shown in the header of the website and the
+Google Sheets version. Replace the file to update it.
 
 ## Use
 
