@@ -54,8 +54,6 @@ nav.tabs a[aria-current="page"] .step{background:var(--accent);color:var(--accen
 .strip b{color:var(--ink);font-family:var(--f-mono);font-weight:600}
 .strip .chip{margin-right:2px}
 
-.example{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--warn-bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:.85rem;margin-top:16px}
-.example strong{color:var(--warn)}
 
 main{padding-block:18px 60px}
 section.view[hidden]{display:none}
@@ -169,7 +167,6 @@ footer p{max-width:90ch;margin:4px 0}
     <p>For confirmed acute PE: severity scores, AHA/ACC Clinical Category (A–E, with R modifier) and category-matched management, built from the 2026 AHA/ACC/ACCP/ACEP/CHEST/SCAI/SHM/SIR/SVM/SVN acute PE guideline.</p>
   </div>
   <div class="hdr-actions">
-    <button class="btn" id="btnExample" type="button">Load example patient</button>
     <button class="btn" id="btnClear" type="button">Clear all</button>
   </div>
 </div></header>
@@ -185,9 +182,6 @@ footer p{max-width:90ch;margin:4px 0}
   <div class="strip" id="strip" aria-live="polite"></div>
 </div></div>
 
-<div class="wrap">
-  <div class="example" id="exampleBanner" hidden><strong>Example patient loaded.</strong> These values are illustrative, not a real patient. Replace them with your own, or press Clear all.</div>
-</div>
 
 <main class="wrap">
   <!-- 1 QUESTIONS -->
@@ -348,11 +342,6 @@ const F={
   ]
 };
 const DEFAULTS={symp:"s",sevbasis:"any",bp:"norm",resp:"auto",bleed:"ok",setting:"ed",first:"1"};
-const EXAMPLE={age:68,sex:"m",hr:115,sbp:105,rr:24,temp:36.8,spo2:89,o2:"air",ams:"0",wt:82,bmi:27.4,cancer:"1",hf:"0",lung:"0",preg:"0",
-  tnt:"e",bnp:"e",lac:1.6,rv:"a",rvsev:"1",ext:"seg",saddle:"0",dvt:"1",cit:"0",
-  h1:"0",h2:"0",h3:"0",h4:"0",h5:"0",h6:"0",h7:"1",h8:"0",h9:"0",h10:"0",h11:"0",
-  m_aki:"0",m_uo:"0",m_ci:"0",m_map:"0",m_scai:"0",bf:"0",brain:"0",bari:"0",icu:"0",acci:"0",
-  rf:"cancer",doacci:"0",noac:"0",symp3:"0",young:"0",cbp:"0"};
 
 /* ---------- render forms ---------- */
 const $=s=>document.querySelector(s);
@@ -675,7 +664,7 @@ function compute(){
   const blank=["age","hr","sbp","rr","spo2","lac"].every(id=>n(id)==null)&&["tnt","bnp","rv","ext"].every(id=>v(id)==="")&&v("bp")==="norm";
   if(blank){
     window.__decision="";
-    const emptyCat=`<p class="sub" style="margin:0 0 8px">AHA/ACC Acute PE Clinical Category</p><h2>No patient data yet</h2><p class="sub" style="margin:6px 0 0">Start with age and vital signs, then labs and CTPA/echo findings. The category, scores and decision appear here as you fill in the Questions tab. Press <strong>Load example patient</strong> to see a worked example.</p>`;
+    const emptyCat=`<p class="sub" style="margin:0 0 8px">AHA/ACC Acute PE Clinical Category</p><h2>No patient data yet</h2><p class="sub" style="margin:6px 0 0">Start with age and vital signs, then labs and CTPA/echo findings. The category, scores and decision appear here as you fill in the Questions tab.</p>`;
     $("#catCard").innerHTML=emptyCat; $("#catCard2").innerHTML=emptyCat;
     $("#qScores").innerHTML=`<h3>Scores</h3><p class="sub" style="margin:6px 0 0">Calculated once age and vital signs are entered.</p>`;
     $("#mgmtTitle").textContent="Management"; $("#mgmt").innerHTML=`<p class="sub">Enter patient data on the Questions tab to see recommendations for this patient's category.</p>`;
@@ -827,8 +816,7 @@ syncPair("preg","h10");
 document.addEventListener("click",e=>{if(e.target.id!=="btnCopy")return;const t=$("#noteBox");
   const done=m=>{$("#copyMsg").textContent=m;};
   try{navigator.clipboard.writeText(t.value).then(()=>done("Copied"),()=>{t.select();done("Selected: press Ctrl/Cmd+C");});}catch(_){t.select();done("Selected: press Ctrl/Cmd+C");}});
-$("#btnExample").addEventListener("click",()=>{setAll(EXAMPLE);$("#exampleBanner").hidden=false;compute();});
-$("#btnClear").addEventListener("click",()=>{setAll({});$("#exampleBanner").hidden=true;compute();});
+$("#btnClear").addEventListener("click",()=>{setAll({});compute();window.scrollTo(0,0);});
 setAll({});
 route();compute();
 })();

@@ -28,7 +28,7 @@ For patients with acute PE already confirmed on imaging.
 
 ## Use
 
-The page opens blank. Press **Load example patient** for a worked example.
+The page opens blank. **Clear all** resets it for the next patient.
 Open `index.html` in any browser, or enable GitHub Pages
 (Settings → Pages → Deploy from branch → `main` / root).
 
